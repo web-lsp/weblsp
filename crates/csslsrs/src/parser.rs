@@ -14,9 +14,7 @@ pub fn parse_css(code: &str) -> CssParse {
     let options = CssParserOptions::default();
 
     // Parse the CSS code
-    let parse_result = biome_parse_css(code, options);
-
-    parse_result
+    biome_parse_css(code, options)
 }
 
 #[cfg(test)]

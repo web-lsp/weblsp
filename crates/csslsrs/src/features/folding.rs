@@ -1,8 +1,51 @@
+use lsp_types::{FoldingRange, FoldingRangeKind};
+use wasm_bindgen::prelude::*;
+
 /// Represents a folding range in the CSS code.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FoldingRange {
-    pub start_line: usize,
-    pub end_line: usize,
+#[wasm_bindgen(js_name = FoldingRange)]
+pub struct FoldingRangeWASM(FoldingRange);
+
+#[wasm_bindgen(js_class = FoldingRange)]
+impl FoldingRangeWASM {
+    #[wasm_bindgen(getter)]
+    pub fn start_line(&self) -> u32 {
+        self.0.start_line
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn start_character(&self) -> Option<u32> {
+        self.0.start_character
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn end_line(&self) -> u32 {
+        self.0.end_line
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn end_character(&self) -> Option<u32> {
+        self.0.end_character
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn kind(&self) -> Option<String> {
+        self.0.kind.as_ref().map(|k| match k {
+            FoldingRangeKind::Comment => "comment".to_string(),
+            FoldingRangeKind::Imports => "imports".to_string(),
+            FoldingRangeKind::Region => "region".to_string(),
+        })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn collapsed_text(&self) -> Option<String> {
+        self.0.collapsed_text.clone()
+    }
+}
+
+impl From<FoldingRange> for FoldingRangeWASM {
+    fn from(folding_range: FoldingRange) -> Self {
+        FoldingRangeWASM(folding_range)
+    }
 }
 
 /// Computes the folding ranges for the given CSS source code.
@@ -31,18 +74,31 @@ pub fn get_folding_ranges(source: &str) -> Vec<FoldingRange> {
         } else if c == '}' {
             let line_number = line_starts.partition_point(|&line_start| line_start <= offset) - 1;
             if let Some((_start_offset, start_line)) = stack.pop() {
-                // Only add folding range if it spans at least one line
                 if line_number > start_line {
-                    folding_ranges.push(FoldingRange {
-                        start_line: start_line,
-                        end_line: line_number,
-                    });
+                    let folding_range = FoldingRange {
+                        start_line: start_line as u32,
+                        start_character: None,
+                        end_line: line_number as u32,
+                        end_character: None,
+                        kind: None,           // You can set FoldingRangeKind if needed
+                        collapsed_text: None, // Optionally set collapsed text
+                    };
+                    folding_ranges.push(folding_range);
                 }
             }
         }
     }
 
     folding_ranges
+}
+
+#[wasm_bindgen]
+pub fn get_folding_ranges_wasm(source: &str) -> Vec<FoldingRangeWASM> {
+    let folding_ranges = get_folding_ranges(source);
+    folding_ranges
+        .into_iter()
+        .map(FoldingRangeWASM::from)
+        .collect()
 }
 
 #[cfg(test)]

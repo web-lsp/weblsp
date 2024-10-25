@@ -2,13 +2,13 @@ alias b := build
 
 default: build
 
-mode := "debug"
+default_mode := "debug"
 
-build:
+build mode=default_mode:
 		echo "Building to native target..."
 		cargo build {{ if mode == "release" {"--release"} else {""} }}
 
-build-wasm:
+build-wasm mode=default_mode:
 		echo "Building to WASM target..."
 		cargo build --target wasm32-unknown-unknown {{ if mode == "release" {"--release"} else {""} }} --features wasm
 		wasm-bindgen ./target/wasm32-unknown-unknown/{{mode}}/csslsrs.wasm --out-dir ./packages/csslsrs/src/wasm --target=experimental-nodejs-module

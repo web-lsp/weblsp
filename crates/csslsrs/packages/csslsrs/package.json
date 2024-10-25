@@ -1,6 +1,6 @@
 {
   "name": "csslsrs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "",
   "exports": {
@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "prepublish": "just build-wasm && pnpm run build",
+    "prepublishOnly": "just build-wasm release && pnpm run build",
     "build": "node ./build.js && tsc",
     "test": "mocha test/**/*.test.ts"
   },

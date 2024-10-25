@@ -1,4 +1,5 @@
 /target
-/packages/csslsrs/src/wasm
 /packages/csslsrs/dist
 node_modules
+.vscode
+.zed

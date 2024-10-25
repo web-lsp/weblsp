@@ -20,6 +20,7 @@ pub fn get_folding_ranges(source: &str) -> Vec<FoldingRange> {
     compute_folding_ranges(source)
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen(typescript_custom_section)]
 const TS_APPEND_CONTENT: &'static str = r#"
 export async function get_folding_ranges(source: import("vscode-languageserver-textdocument").TextDocument): Promise<import("vscode-languageserver-types").FoldingRange[]>;

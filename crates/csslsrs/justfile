@@ -5,11 +5,10 @@ default: build
 mode := "debug"
 
 build:
-		echo "Building..."
+		echo "Building to native target..."
 		cargo build {{ if mode == "release" {"--release"} else {""} }}
-		just _create_wasm
 
-
-_create_wasm:
-		echo "Creating wasm..."
-		wasm-bindgen ./target/wasm32-unknown-unknown/{{mode}}/csslsrs.wasm --out-dir ./packages/csslsrs/src/wasm
+build-wasm:
+		echo "Building to WASM target..."
+		cargo build --target wasm32-unknown-unknown {{ if mode == "release" {"--release"} else {""} }} --features wasm
+		wasm-bindgen ./target/wasm32-unknown-unknown/{{mode}}/csslsrs.wasm --out-dir ./packages/csslsrs/src/wasm --target=experimental-nodejs-module

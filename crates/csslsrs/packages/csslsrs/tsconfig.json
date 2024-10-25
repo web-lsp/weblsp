@@ -14,6 +14,7 @@
     "module": "NodeNext",
     "outDir": "dist",
     "sourceMap": true,
-    "declaration": true,
-  }
+    "declaration": true
+  },
+  "include": ["src/**/*"]
 }

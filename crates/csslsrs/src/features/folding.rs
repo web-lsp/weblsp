@@ -20,10 +20,17 @@ pub fn get_folding_ranges(source: &str) -> Vec<FoldingRange> {
     compute_folding_ranges(source)
 }
 
+#[wasm_bindgen(typescript_custom_section)]
+const TS_APPEND_CONTENT: &'static str = r#"
+export async function get_folding_ranges(source: import("vscode-languageserver-textdocument").TextDocument): Promise<import("vscode-languageserver-types").FoldingRange[]>;
+"#;
+
 #[cfg(feature = "wasm")]
-#[wasm_bindgen]
-pub fn get_folding_ranges(source: &str) -> JsValue {
-    let folding_ranges = compute_folding_ranges(source);
+#[wasm_bindgen(skip_typescript)]
+pub fn get_folding_ranges(source: JsValue) -> JsValue {
+    let doc = crate::text_document::wasm_bindings::create_text_document(source);
+    let folding_ranges = compute_folding_ranges(doc.text.as_str());
+
     serde_wasm_bindgen::to_value(&folding_ranges).unwrap()
 }
 

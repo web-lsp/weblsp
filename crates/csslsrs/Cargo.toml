@@ -7,10 +7,11 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-wasm = ["wasm-bindgen", "serde-wasm-bindgen"]
+wasm = ["wasm-bindgen", "serde-wasm-bindgen", "console_error_panic_hook"]
 
 [dependencies]
 biome_css_parser = "0.5"
+console_error_panic_hook = { version = "0.1.7", optional = true }
 lsp-types = "0.97"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = { version = "0.6", optional = true }

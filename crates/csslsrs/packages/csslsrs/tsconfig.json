@@ -13,8 +13,7 @@
     "noImplicitOverride": true,
     "module": "NodeNext",
     "outDir": "dist",
-    "sourceMap": true,
     "declaration": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/*"]
 }

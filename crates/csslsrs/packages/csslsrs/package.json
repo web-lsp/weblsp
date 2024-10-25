@@ -1,13 +1,22 @@
 {
   "name": "csslsrs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "",
-  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "prepublish": "just build-wasm && pnpm run build",
+    "build": "node ./build.js && tsc",
     "test": "mocha test/**/*.test.ts"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [],
   "author": "",
   "license": "MIT",
@@ -19,6 +28,7 @@
   "devDependencies": {
     "@types/chai": "^5.0.0",
     "@types/mocha": "^10.0.9",
+    "@types/node": "^22.8.0",
     "chai": "^5.1.2",
     "mocha": "^10.7.3",
     "tsx": "^4.19.1",

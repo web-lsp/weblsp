@@ -6,7 +6,12 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+wasm = ["wasm-bindgen", "serde-wasm-bindgen"]
+
 [dependencies]
-biome_css_parser = "0.5.7"
-lsp-types = "0.97.0"
-wasm-bindgen = "0.2.95"
+biome_css_parser = "0.5"
+lsp-types = "0.97"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }

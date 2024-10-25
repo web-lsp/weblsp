@@ -1,18 +1,14 @@
-use wasm_bindgen::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// VSCode-like object that represents a text document.
-#[wasm_bindgen]
+#[derive(Serialize, Deserialize)]
 pub struct TextDocument {
-    #[wasm_bindgen(skip)]
     pub uri: String,
-    #[wasm_bindgen(skip)]
     pub language_id: String,
     pub version: i64,
-    #[wasm_bindgen(skip)]
     pub text: String,
 }
 
-#[wasm_bindgen]
 impl TextDocument {
     /// Creates a new `TextDocument` object.
     ///
@@ -26,7 +22,6 @@ impl TextDocument {
     /// # Returns
     ///
     /// * A `TextDocument` object.
-    #[wasm_bindgen(constructor)]
     pub fn new(uri: &str, language_id: &str, version: i64, text: &str) -> TextDocument {
         TextDocument {
             uri: uri.to_string(),
@@ -36,18 +31,46 @@ impl TextDocument {
         }
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn uri(&self) -> String {
-        self.uri.clone()
+    pub fn uri(&self) -> &str {
+        &self.uri
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn language_id(&self) -> String {
-        self.language_id.clone()
+    pub fn language_id(&self) -> &str {
+        &self.language_id
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn text(&self) -> String {
-        self.text.clone()
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
+#[cfg(feature = "wasm")]
+mod wasm_bindings {
+    use super::TextDocument;
+    use serde_wasm_bindgen;
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub fn create_text_document(js_value: JsValue) -> JsValue {
+        let doc: TextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
+        serde_wasm_bindgen::to_value(&doc).unwrap()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_text_document_uri(js_value: JsValue) -> JsValue {
+        let doc: TextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
+        serde_wasm_bindgen::to_value(&doc.uri).unwrap()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_text_document_language_id(js_value: JsValue) -> JsValue {
+        let doc: TextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
+        serde_wasm_bindgen::to_value(&doc.language_id).unwrap()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_text_document_text(js_value: JsValue) -> JsValue {
+        let doc: TextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
+        serde_wasm_bindgen::to_value(&doc.text).unwrap()
     }
 }

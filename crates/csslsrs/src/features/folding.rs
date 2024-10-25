@@ -1,77 +1,10 @@
-use lsp_types::{FoldingRange, FoldingRangeKind};
+use lsp_types::FoldingRange;
+
+#[cfg(feature = "wasm")]
+use serde_wasm_bindgen;
+
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
-
-/// Represents a folding range in the CSS code.
-#[wasm_bindgen]
-pub struct FoldingRangeWASM(FoldingRange);
-
-#[wasm_bindgen(js_class = FoldingRange)]
-impl FoldingRangeWASM {
-    #[wasm_bindgen(constructor)]
-    pub fn new(
-        start_line: u32,
-        start_character: Option<u32>,
-        end_line: u32,
-        end_character: Option<u32>,
-        kind: Option<String>,
-        collapsed_text: Option<String>,
-    ) -> FoldingRangeWASM {
-        let kind = kind.map(|k| match k.as_str() {
-            "comment" => FoldingRangeKind::Comment,
-            "imports" => FoldingRangeKind::Imports,
-            "region" => FoldingRangeKind::Region,
-            _ => FoldingRangeKind::Region, // Cas par défaut
-        });
-
-        FoldingRangeWASM(FoldingRange {
-            start_line,
-            start_character,
-            end_line,
-            end_character,
-            kind,
-            collapsed_text,
-        })
-    }
-    #[wasm_bindgen(getter)]
-    pub fn start_line(&self) -> u32 {
-        self.0.start_line
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn start_character(&self) -> Option<u32> {
-        self.0.start_character
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn end_line(&self) -> u32 {
-        self.0.end_line
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn end_character(&self) -> Option<u32> {
-        self.0.end_character
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn kind(&self) -> Option<String> {
-        self.0.kind.as_ref().map(|k| match k {
-            FoldingRangeKind::Comment => "comment".to_string(),
-            FoldingRangeKind::Imports => "imports".to_string(),
-            FoldingRangeKind::Region => "region".to_string(),
-        })
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn collapsed_text(&self) -> Option<String> {
-        self.0.collapsed_text.clone()
-    }
-}
-
-impl From<FoldingRange> for FoldingRangeWASM {
-    fn from(folding_range: FoldingRange) -> Self {
-        FoldingRangeWASM(folding_range)
-    }
-}
 
 /// Computes the folding ranges for the given CSS source code.
 ///
@@ -82,8 +15,19 @@ impl From<FoldingRange> for FoldingRangeWASM {
 /// # Returns
 ///
 /// * A vector of `FoldingRange` indicating the foldable regions in the CSS code.
+#[cfg(not(feature = "wasm"))]
+pub fn get_folding_ranges(source: &str) -> Vec<FoldingRange> {
+    compute_folding_ranges(source)
+}
+
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
-pub fn get_folding_ranges(source: &str) -> Vec<FoldingRangeWASM> {
+pub fn get_folding_ranges(source: &str) -> JsValue {
+    let folding_ranges = compute_folding_ranges(source);
+    serde_wasm_bindgen::to_value(&folding_ranges).unwrap()
+}
+
+fn compute_folding_ranges(source: &str) -> Vec<FoldingRange> {
     let mut folding_ranges = Vec::new();
     let mut stack = Vec::new();
 
@@ -101,14 +45,14 @@ pub fn get_folding_ranges(source: &str) -> Vec<FoldingRangeWASM> {
             if let Some((_start_offset, start_line)) = stack.pop() {
                 let end_line = line_starts.partition_point(|&line_start| line_start <= offset) - 1;
                 if start_line != end_line {
-                    folding_ranges.push(FoldingRangeWASM::from(FoldingRange {
+                    folding_ranges.push(FoldingRange {
                         start_line: start_line as u32,
                         start_character: None,
                         end_line: end_line as u32,
                         end_character: None,
                         kind: None,
                         collapsed_text: None,
-                    }));
+                    });
                 }
             }
         }
@@ -117,23 +61,14 @@ pub fn get_folding_ranges(source: &str) -> Vec<FoldingRangeWASM> {
     folding_ranges
 }
 
-#[wasm_bindgen]
-pub fn get_folding_ranges_wasm(source: &str) -> Vec<FoldingRangeWASM> {
-    let folding_ranges = get_folding_ranges(source);
-    folding_ranges
-        .into_iter()
-        .map(FoldingRangeWASM::from)
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_get_folding_ranges_empty() {
+    fn test_compute_folding_ranges_empty() {
         let code = "";
-        let folding_ranges = get_folding_ranges(code);
+        let folding_ranges = compute_folding_ranges(code);
 
         assert!(
             folding_ranges.is_empty(),
@@ -142,81 +77,72 @@ mod tests {
     }
 
     #[test]
-    fn test_get_folding_ranges_single_rule() {
+    fn test_compute_folding_ranges_single_rule() {
         let code = "body {\n    margin: 0;\n    padding: 0;\n}\n";
-        let folding_ranges = get_folding_ranges(code);
+        let folding_ranges = compute_folding_ranges(code);
 
         assert_eq!(folding_ranges.len(), 1, "Expected one folding range");
         let range = &folding_ranges[0];
-        assert_eq!(range.start_line(), 0, "Folding should start at line 0");
-        assert_eq!(range.end_line(), 3, "Folding should end at line 3");
+        assert_eq!(range.start_line, 0, "Folding should start at line 0");
+        assert_eq!(range.end_line, 3, "Folding should end at line 3");
     }
 
     #[test]
-    fn test_get_folding_ranges_multiple_rules() {
+    fn test_compute_folding_ranges_multiple_rules() {
         let code = "body {\n    margin: 0;\n}\n\nh1 {\n    color: red;\n}\n";
-        let mut folding_ranges = get_folding_ranges(code);
+        let mut folding_ranges = compute_folding_ranges(code);
 
         assert_eq!(folding_ranges.len(), 2, "Expected two folding ranges");
 
-        folding_ranges.sort_by_key(|fr| fr.start_line());
+        folding_ranges.sort_by_key(|fr| fr.start_line);
 
         let range1 = &folding_ranges[0];
-        assert_eq!(
-            range1.start_line(),
-            0,
-            "First folding should start at line 0"
-        );
-        assert_eq!(range1.end_line(), 2, "First folding should end at line 2");
+        assert_eq!(range1.start_line, 0, "First folding should start at line 0");
+        assert_eq!(range1.end_line, 2, "First folding should end at line 2");
 
         let range2 = &folding_ranges[1];
         assert_eq!(
-            range2.start_line(),
-            4,
+            range2.start_line, 4,
             "Second folding should start at line 4"
         );
-        assert_eq!(range2.end_line(), 6, "Second folding should end at line 6");
+        assert_eq!(range2.end_line, 6, "Second folding should end at line 6");
     }
 
     #[test]
-    fn test_get_folding_ranges_nested_rules() {
+    fn test_compute_folding_ranges_nested_rules() {
         let code = "@media screen {\n    body {\n        margin: 0;\n    }\n}\n";
-        let mut folding_ranges = get_folding_ranges(code);
+        let mut folding_ranges = compute_folding_ranges(code);
 
         assert_eq!(folding_ranges.len(), 2, "Expected two folding ranges");
 
-        // Sort folding ranges by start_line()
-        folding_ranges.sort_by_key(|fr| fr.start_line());
+        // Sort folding ranges by start_line
+        folding_ranges.sort_by_key(|fr| fr.start_line);
 
         let outer_range = &folding_ranges[0];
         assert_eq!(
-            outer_range.start_line(),
-            0,
+            outer_range.start_line, 0,
             "Outer folding should start at line 0"
         );
         assert_eq!(
-            outer_range.end_line(),
-            4,
+            outer_range.end_line, 4,
             "Outer folding should end at line 4"
         );
 
         let inner_range = &folding_ranges[1];
         assert_eq!(
-            inner_range.start_line(),
-            1,
+            inner_range.start_line, 1,
             "Inner folding should start at line 1"
         );
         assert_eq!(
-            inner_range.end_line(),
-            3,
+            inner_range.end_line, 3,
             "Inner folding should end at line 3"
         );
     }
 
     #[test]
-    fn test_get_folding_ranges_single_line_rule() {
+    fn test_compute_folding_ranges_single_line_rule() {
         let code = "h1 { color: blue; }\n";
-        let folding_ranges = get_folding_ranges(code);
+        let folding_ranges = compute_folding_ranges(code);
 
         // Since the rule is on a single line, there should be no folding range
         assert!(
@@ -226,9 +152,9 @@ mod tests {
     }
 
     #[test]
-    fn test_get_folding_ranges_unmatched_braces() {
+    fn test_compute_folding_ranges_unmatched_braces() {
         let code = "body {\n    margin: 0;\n    padding: 0;\n\n";
-        let folding_ranges = get_folding_ranges(code);
+        let folding_ranges = compute_folding_ranges(code);
 
         // The opening brace does not have a matching closing brace
         // So the folding range should not be added
@@ -239,49 +165,40 @@ mod tests {
     }
 
     #[test]
-    fn test_get_folding_ranges_with_comments() {
+    fn test_compute_folding_ranges_with_comments() {
         let code = "/* Comment block\nspanning multiple lines\n*/\nbody {\n    margin: 0;\n}\n";
-        let folding_ranges = get_folding_ranges(code);
+        let folding_ranges = compute_folding_ranges(code);
 
         assert_eq!(folding_ranges.len(), 1, "Expected one folding range");
 
         let range = &folding_ranges[0];
-        assert_eq!(range.start_line(), 3, "Folding should start at line 3");
-        assert_eq!(range.end_line(), 5, "Folding should end at line 5");
+        assert_eq!(range.start_line, 3, "Folding should start at line 3");
+        assert_eq!(range.end_line, 5, "Folding should end at line 5");
     }
 
     #[test]
-    fn test_get_folding_ranges_complex() {
+    fn test_compute_folding_ranges_complex() {
         let code = "@media screen {\n    @supports (display: grid) {\n        .container {\n            display: grid;\n        }\n    }\n}\n";
-        let mut folding_ranges = get_folding_ranges(code);
+        let mut folding_ranges = compute_folding_ranges(code);
 
         assert_eq!(folding_ranges.len(), 3, "Expected three folding ranges");
 
-        // Sort folding ranges by start_line()
-        folding_ranges.sort_by_key(|fr| fr.start_line());
+        // Sort folding ranges by start_line
+        folding_ranges.sort_by_key(|fr| fr.start_line);
 
         let range1 = &folding_ranges[0];
-        assert_eq!(
-            range1.start_line(),
-            0,
-            "First folding should start at line 0"
-        );
-        assert_eq!(range1.end_line(), 6, "First folding should end at line 6");
+        assert_eq!(range1.start_line, 0, "First folding should start at line 0");
+        assert_eq!(range1.end_line, 6, "First folding should end at line 6");
 
         let range2 = &folding_ranges[1];
         assert_eq!(
-            range2.start_line(),
-            1,
+            range2.start_line, 1,
             "Second folding should start at line 1"
         );
-        assert_eq!(range2.end_line(), 5, "Second folding should end at line 5");
+        assert_eq!(range2.end_line, 5, "Second folding should end at line 5");
 
         let range3 = &folding_ranges[2];
-        assert_eq!(
-            range3.start_line(),
-            2,
-            "Third folding should start at line 2"
-        );
-        assert_eq!(range3.end_line(), 4, "Third folding should end at line 4");
+        assert_eq!(range3.start_line, 2, "Third folding should start at line 2");
+        assert_eq!(range3.end_line, 4, "Third folding should end at line 4");
     }
 }

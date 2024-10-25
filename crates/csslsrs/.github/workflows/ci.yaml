@@ -43,6 +43,9 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Setup Just
+        uses: extractions/setup-just@v1
+
       - name: Build
         run: just build
 
@@ -62,6 +65,9 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Setup Just
+        uses: extractions/setup-just@v1
+
       - name: Build
         run: just build-wasm
 
@@ -80,6 +86,9 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
+
+      - name: Setup Just
+        uses: extractions/setup-just@v1
 
       - name: Build (WASM)
         run: just build-wasm

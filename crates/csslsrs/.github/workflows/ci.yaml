@@ -34,15 +34,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
 
@@ -73,6 +64,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Setup wasm-bindgen
+        run: cargo install wasm-bindgen-cli
+
       - name: Setup Just
         uses: extractions/setup-just@v1
 
@@ -99,6 +93,9 @@ jobs:
         uses: moonrepo/setup-rust@v1
         with:
           targets: wasm32-unknown-unknown
+
+      - name: Setup wasm-bindgen
+        run: cargo install wasm-bindgen-cli
 
       - name: Setup Just
         uses: extractions/setup-just@v1

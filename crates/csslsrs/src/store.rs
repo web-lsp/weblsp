@@ -8,10 +8,42 @@ pub fn document_store() -> &'static Mutex<DocumentStore> {
     unsafe { DOCUMENT_STORE.get_or_init(|| Mutex::new(DocumentStore::new())) }
 }
 
-use lsp_types::TextDocumentItem;
+use biome_css_parser::CssParse;
+use lsp_types::{TextDocumentItem, Uri};
+
+use crate::parser::parse_css;
+
+pub struct StoreEntry {
+    document: TextDocumentItem,
+    last_parsed_version: Option<i32>,
+    css_tree: Option<CssParse>,
+}
+
+impl StoreEntry {
+    pub fn get_parsed_css(&mut self) -> Option<&CssParse> {
+        // If the CSS tree is not yet parsed, parse it
+        if self.css_tree.is_none() {
+            self.css_tree = Some(parse_css(&self.document.text));
+            self.last_parsed_version = Some(self.document.version);
+
+            return self.css_tree.as_ref();
+        }
+
+        // If the document has been updated, re-parse the CSS tree
+        if self.document.version != self.last_parsed_version.unwrap() {
+            self.css_tree = Some(parse_css(&self.document.text));
+            self.last_parsed_version = Some(self.document.version);
+
+            return self.css_tree.as_ref();
+        } else {
+            // Otherwise, return the cached CSS tree
+            return self.css_tree.as_ref();
+        }
+    }
+}
 
 pub struct DocumentStore {
-    documents: HashMap<String, TextDocumentItem>,
+    documents: HashMap<Uri, StoreEntry>,
 }
 
 impl DocumentStore {
@@ -22,14 +54,21 @@ impl DocumentStore {
     }
 
     pub fn insert(&mut self, document: TextDocumentItem) {
-        self.documents.insert(document.uri.to_string(), document);
+        self.documents.insert(
+            document.uri.clone(),
+            StoreEntry {
+                document,
+                last_parsed_version: None,
+                css_tree: None,
+            },
+        );
     }
 
-    pub fn get(&self, uri: &str) -> Option<&TextDocumentItem> {
+    pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {
         self.documents.get(uri)
     }
 
-    pub fn remove(&mut self, uri: &str) {
+    pub fn remove(&mut self, uri: &Uri) {
         self.documents.remove(uri);
     }
 }

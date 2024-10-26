@@ -32,8 +32,6 @@ pub fn get_folding_ranges(source: JsValue) -> JsValue {
     use crate::store::document_store;
 
     let doc = crate::text_document::wasm_bindings::create_text_document(source);
-    document_store().lock().unwrap().insert(doc.clone());
-
     let folding_ranges = compute_folding_ranges(doc);
 
     serde_wasm_bindgen::to_value(&folding_ranges).unwrap()

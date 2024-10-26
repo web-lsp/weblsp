@@ -29,8 +29,6 @@ export async function get_folding_ranges(source: import("vscode-languageserver-t
 #[cfg(feature = "wasm")]
 #[wasm_bindgen(skip_typescript)]
 pub fn get_folding_ranges(source: JsValue) -> JsValue {
-    use crate::store::document_store;
-
     let doc = crate::text_document::wasm_bindings::create_text_document(source);
     let folding_ranges = compute_folding_ranges(doc);
 

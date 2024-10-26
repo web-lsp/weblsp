@@ -17,7 +17,7 @@ pub mod wasm_bindings {
     }
 
     /// JS has a slightly different representation of a text document than lsp-types, as such for the serialization
-    /// and deserialization of text documents we need to use a custom struct in between.
+    /// and deserialization of text documents we need to use a custom struct in between. Bit annoying but it works.
     #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     struct JSTextDocument {

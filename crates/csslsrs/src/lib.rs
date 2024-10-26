@@ -5,3 +5,5 @@ pub mod text_document;
 pub mod features {
     pub mod folding;
 }
+
+pub mod store;

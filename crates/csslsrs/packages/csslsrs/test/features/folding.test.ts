@@ -2,6 +2,7 @@ import { describe, it } from "mocha";
 import { expect } from "chai";
 import { get_folding_ranges } from "../../dist/index.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import type { FoldingRange } from "vscode-languageserver-types";
 
 describe("Folding", () => {
   it("Can return folding ranges", async () => {
@@ -12,7 +13,8 @@ describe("Folding", () => {
       {
         endLine: 3,
         startLine: 0,
+        kind: "region",
       },
-    ]);
+    ] satisfies FoldingRange[]);
   });
 });

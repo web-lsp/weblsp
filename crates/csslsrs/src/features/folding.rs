@@ -1,4 +1,4 @@
-use lsp_types::FoldingRange;
+use lsp_types::{FoldingRange, FoldingRangeKind, TextDocumentItem};
 
 #[cfg(feature = "wasm")]
 use serde_wasm_bindgen;
@@ -16,8 +16,8 @@ use wasm_bindgen::prelude::*;
 ///
 /// * A vector of `FoldingRange` indicating the foldable regions in the CSS code.
 #[cfg(not(feature = "wasm"))]
-pub fn get_folding_ranges(source: &str) -> Vec<FoldingRange> {
-    compute_folding_ranges(source)
+pub fn get_folding_ranges(document: TextDocumentItem) -> Vec<FoldingRange> {
+    compute_folding_ranges(document)
 }
 
 #[cfg(feature = "wasm")]
@@ -29,15 +29,21 @@ export async function get_folding_ranges(source: import("vscode-languageserver-t
 #[cfg(feature = "wasm")]
 #[wasm_bindgen(skip_typescript)]
 pub fn get_folding_ranges(source: JsValue) -> JsValue {
+    use crate::store::document_store;
+
     let doc = crate::text_document::wasm_bindings::create_text_document(source);
-    let folding_ranges = compute_folding_ranges(doc.text.as_str());
+    document_store().lock().unwrap().insert(doc.clone());
+
+    let folding_ranges = compute_folding_ranges(doc);
 
     serde_wasm_bindgen::to_value(&folding_ranges).unwrap()
 }
 
-fn compute_folding_ranges(source: &str) -> Vec<FoldingRange> {
+fn compute_folding_ranges(document: TextDocumentItem) -> Vec<FoldingRange> {
     let mut folding_ranges = Vec::new();
     let mut stack = Vec::new();
+
+    let source = document.text;
 
     // Precompute line start offsets
     let line_starts: Vec<usize> = std::iter::once(0)
@@ -58,7 +64,7 @@ fn compute_folding_ranges(source: &str) -> Vec<FoldingRange> {
                         start_character: None,
                         end_line: end_line as u32,
                         end_character: None,
-                        kind: None,
+                        kind: Some(FoldingRangeKind::Region),
                         collapsed_text: None,
                     });
                 }
@@ -71,12 +77,22 @@ fn compute_folding_ranges(source: &str) -> Vec<FoldingRange> {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use lsp_types::Uri;
+
     use super::*;
 
     #[test]
     fn test_compute_folding_ranges_empty() {
-        let code = "";
-        let folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "".to_string(),
+        );
+
+        let folding_ranges = compute_folding_ranges(document);
 
         assert!(
             folding_ranges.is_empty(),
@@ -86,8 +102,14 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_single_rule() {
-        let code = "body {\n    margin: 0;\n    padding: 0;\n}\n";
-        let folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "body {\n    margin: 0;\n    padding: 0;\n}\n".to_string(),
+        );
+
+        let folding_ranges = compute_folding_ranges(document);
 
         assert_eq!(folding_ranges.len(), 1, "Expected one folding range");
         let range = &folding_ranges[0];
@@ -97,8 +119,13 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_multiple_rules() {
-        let code = "body {\n    margin: 0;\n}\n\nh1 {\n    color: red;\n}\n";
-        let mut folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "body {\n    margin: 0;\n}\n\nh1 {\n    color: red;\n}\n".to_string(),
+        );
+        let mut folding_ranges = compute_folding_ranges(document);
 
         assert_eq!(folding_ranges.len(), 2, "Expected two folding ranges");
 
@@ -118,8 +145,13 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_nested_rules() {
-        let code = "@media screen {\n    body {\n        margin: 0;\n    }\n}\n";
-        let mut folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "@media screen {\n    body {\n        margin: 0;\n    }\n}\n".to_string(),
+        );
+        let mut folding_ranges = compute_folding_ranges(document);
 
         assert_eq!(folding_ranges.len(), 2, "Expected two folding ranges");
 
@@ -149,8 +181,13 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_single_line_rule() {
-        let code = "h1 { color: blue; }\n";
-        let folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "h1 { color: blue; }\n".to_string(),
+        );
+        let folding_ranges = compute_folding_ranges(document);
 
         // Since the rule is on a single line, there should be no folding range
         assert!(
@@ -161,8 +198,13 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_unmatched_braces() {
-        let code = "body {\n    margin: 0;\n    padding: 0;\n\n";
-        let folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "body {\n    margin: 0;\n    padding: 0;\n\n".to_string(),
+        );
+        let folding_ranges = compute_folding_ranges(document);
 
         // The opening brace does not have a matching closing brace
         // So the folding range should not be added
@@ -174,8 +216,14 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_with_comments() {
-        let code = "/* Comment block\nspanning multiple lines\n*/\nbody {\n    margin: 0;\n}\n";
-        let folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "/* Comment block\nspanning multiple lines\n*/\nbody {\n    margin: 0;\n}\n"
+                .to_string(),
+        );
+        let folding_ranges = compute_folding_ranges(document);
 
         assert_eq!(folding_ranges.len(), 1, "Expected one folding range");
 
@@ -186,8 +234,13 @@ mod tests {
 
     #[test]
     fn test_compute_folding_ranges_complex() {
-        let code = "@media screen {\n    @supports (display: grid) {\n        .container {\n            display: grid;\n        }\n    }\n}\n";
-        let mut folding_ranges = compute_folding_ranges(code);
+        let document = TextDocumentItem::new(
+            Uri::from_str("file:///test.css").unwrap(),
+            "css".to_string(),
+            1,
+            "@media screen {\n    @supports (display: grid) {\n        .container {\n            display: grid;\n        }\n    }\n}\n".to_string(),
+        );
+        let mut folding_ranges = compute_folding_ranges(document);
 
         assert_eq!(folding_ranges.len(), 3, "Expected three folding ranges");
 

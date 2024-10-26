@@ -1,1 +1,1 @@
-export { get_folding_ranges } from "./wasm/csslsrs.js";
+export { get_folding_ranges } from "./generated/csslsrs.js";

@@ -12,7 +12,7 @@
   "scripts": {
     "prepublishOnly": "just build-wasm release && pnpm run build",
     "build": "node ./build.js && tsc",
-    "test": "mocha test/**/*.test.ts"
+    "test": "mocha --require tsx test/**/*.test.ts"
   },
   "files": [
     "dist"

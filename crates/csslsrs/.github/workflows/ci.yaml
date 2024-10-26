@@ -65,7 +65,9 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Setup wasm-bindgen
-        run: cargo install wasm-bindgen-cli
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: wasm-bindgen-cli
 
       - name: Setup Just
         uses: extractions/setup-just@v1
@@ -95,7 +97,9 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Setup wasm-bindgen
-        run: cargo install wasm-bindgen-cli
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: wasm-bindgen-cli
 
       - name: Setup Just
         uses: extractions/setup-just@v1

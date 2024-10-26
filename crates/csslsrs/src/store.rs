@@ -11,24 +11,17 @@ pub struct StoreEntry {
 }
 
 impl StoreEntry {
-    pub fn get_parsed_css(&mut self) -> Option<&CssParse> {
+    pub fn set_parsed_css(&mut self) {
         // If the CSS tree is not yet parsed, parse it
         if self.css_tree.is_none() {
             self.css_tree = Some(parse_css(&self.document.text));
             self.last_parsed_version = Some(self.document.version);
-
-            return self.css_tree.as_ref();
         }
 
         // If the document has been updated, re-parse the CSS tree
         if self.document.version != self.last_parsed_version.unwrap() {
             self.css_tree = Some(parse_css(&self.document.text));
             self.last_parsed_version = Some(self.document.version);
-
-            return self.css_tree.as_ref();
-        } else {
-            // Otherwise, return the cached CSS tree
-            return self.css_tree.as_ref();
         }
     }
 }
@@ -44,29 +37,19 @@ impl DocumentStore {
         }
     }
 
-    pub fn insert(&mut self, document: TextDocumentItem) {
-        self.documents.insert(
-            document.uri.clone(),
-            StoreEntry {
-                document,
-                last_parsed_version: None,
-                css_tree: None,
-            },
-        );
-    }
-
-    pub fn insert_or_get(&mut self, document: TextDocumentItem) -> &StoreEntry {
-        self.documents
+    pub fn update_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
+        let store_entry = self
+            .documents
             .entry(document.uri.clone())
             .or_insert(StoreEntry {
                 document,
                 last_parsed_version: None,
                 css_tree: None,
-            })
-    }
+            });
 
-    pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {
-        self.documents.get(uri)
+        store_entry.set_parsed_css();
+
+        store_entry
     }
 
     pub fn remove(&mut self, uri: &Uri) {

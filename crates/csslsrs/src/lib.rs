@@ -5,6 +5,7 @@ pub mod service;
 pub mod store;
 
 pub mod features {
+    pub mod colors;
     pub mod folding;
 }
 

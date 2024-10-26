@@ -41,6 +41,19 @@ function addHeapObject(obj) {
 
 function getObject(idx) { return heap[idx]; }
 
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
+
+let cachedDataViewMemory0 = null;
+
+function getDataViewMemory0() {
+    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
+        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
+    }
+    return cachedDataViewMemory0;
+}
+
 let WASM_VECTOR_LEN = 0;
 
 let cachedTextEncoder = new TextEncoder('utf-8');
@@ -95,19 +108,6 @@ function passStringToWasm0(arg, malloc, realloc) {
 
     WASM_VECTOR_LEN = offset;
     return ptr;
-}
-
-function isLikeNone(x) {
-    return x === undefined || x === null;
-}
-
-let cachedDataViewMemory0 = null;
-
-function getDataViewMemory0() {
-    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
-        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
-    }
-    return cachedDataViewMemory0;
 }
 
 function debugString(val) {
@@ -190,6 +190,26 @@ function takeObject(idx) {
  * @param {any} document
  * @returns {any}
  */
+export function get_document_colors(document) {
+    const ret = wasm.get_document_colors(addHeapObject(document));
+    return takeObject(ret);
+}
+
+/**
+ * @param {any} document
+ * @param {any} color
+ * @param {any} range
+ * @returns {any}
+ */
+export function get_color_presentations(document, color, range) {
+    const ret = wasm.get_color_presentations(addHeapObject(document), addHeapObject(color), addHeapObject(range));
+    return takeObject(ret);
+}
+
+/**
+ * @param {any} document
+ * @returns {any}
+ */
 export function get_folding_ranges(document) {
     const ret = wasm.get_folding_ranges(addHeapObject(document));
     return takeObject(ret);
@@ -210,6 +230,13 @@ export function __wbindgen_in(arg0, arg1) {
     return ret;
 };
 
+export function __wbindgen_number_get(arg0, arg1) {
+    const obj = getObject(arg1);
+    const ret = typeof(obj) === 'number' ? obj : undefined;
+    getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
+    getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
+};
+
 export function __wbindgen_string_get(arg0, arg1) {
     const obj = getObject(arg1);
     const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -228,13 +255,6 @@ export function __wbindgen_is_object(arg0) {
 export function __wbindgen_as_number(arg0) {
     const ret = +getObject(arg0);
     return ret;
-};
-
-export function __wbindgen_number_get(arg0, arg1) {
-    const obj = getObject(arg1);
-    const ret = typeof(obj) === 'number' ? obj : undefined;
-    getDataViewMemory0().setFloat64(arg0 + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
-    getDataViewMemory0().setInt32(arg0 + 4 * 0, !isLikeNone(ret), true);
 };
 
 export function __wbindgen_boolean_get(arg0) {

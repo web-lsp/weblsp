@@ -1,7 +1,7 @@
 use crate::service::LanguageService;
 use lsp_types::{FoldingRange, FoldingRangeKind, TextDocumentItem};
 
-pub fn compute_folding_ranges(document: &TextDocumentItem) -> Vec<FoldingRange> {
+fn compute_folding_ranges(document: &TextDocumentItem) -> Vec<FoldingRange> {
     let mut folding_ranges = Vec::new();
     let mut stack = Vec::new();
 
@@ -48,7 +48,7 @@ impl LanguageService {
     ///
     /// * A vector of `FoldingRange` indicating the foldable regions in the CSS code.
     pub fn get_folding_ranges(mut self, document: TextDocumentItem) -> Vec<FoldingRange> {
-        let store_document = self.store.insert_or_get(document);
+        let store_document = self.store.update_document(document);
         compute_folding_ranges(&store_document.document)
     }
 }

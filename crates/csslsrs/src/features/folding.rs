@@ -53,7 +53,7 @@ impl LanguageService {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 mod wasm_bindings {
     use super::compute_folding_ranges;
     use serde_wasm_bindgen;

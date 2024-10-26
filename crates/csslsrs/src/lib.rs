@@ -8,5 +8,5 @@ pub mod features {
     pub mod folding;
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 pub mod wasm_text_document;

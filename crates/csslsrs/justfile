@@ -10,7 +10,7 @@ build mode=default_mode:
 
 build-wasm mode=default_mode:
 		echo "Building to WASM target..."
-		cargo build --target wasm32-unknown-unknown {{ if mode == "release" {"--release"} else {""} }} --features wasm
+		cargo build --target wasm32-unknown-unknown {{ if mode == "release" {"--release"} else {""} }}
 		wasm-bindgen ./target/wasm32-unknown-unknown/{{mode}}/csslsrs.wasm --out-dir ./packages/csslsrs/src/generated --target=experimental-nodejs-module
 		pnpm -C ./packages/csslsrs install
 		pnpm -C ./packages/csslsrs run build

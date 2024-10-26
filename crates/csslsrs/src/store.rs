@@ -1,22 +1,13 @@
-// A static store of text documents
-
-use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
-
-pub fn document_store() -> &'static Mutex<DocumentStore> {
-    static mut DOCUMENT_STORE: OnceLock<Mutex<DocumentStore>> = OnceLock::new();
-    unsafe { DOCUMENT_STORE.get_or_init(|| Mutex::new(DocumentStore::new())) }
-}
-
 use biome_css_parser::CssParse;
 use lsp_types::{TextDocumentItem, Uri};
+use std::collections::HashMap;
 
 use crate::parser::parse_css;
 
 pub struct StoreEntry {
-    document: TextDocumentItem,
+    pub document: TextDocumentItem,
     last_parsed_version: Option<i32>,
-    css_tree: Option<CssParse>,
+    pub css_tree: Option<CssParse>,
 }
 
 impl StoreEntry {
@@ -62,6 +53,16 @@ impl DocumentStore {
                 css_tree: None,
             },
         );
+    }
+
+    pub fn insert_or_get(&mut self, document: TextDocumentItem) -> &StoreEntry {
+        self.documents
+            .entry(document.uri.clone())
+            .or_insert(StoreEntry {
+                document,
+                last_parsed_version: None,
+                css_tree: None,
+            })
     }
 
     pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {

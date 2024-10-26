@@ -1,9 +1,12 @@
 pub mod analyzer;
-pub mod formatter;
 pub mod parser;
-pub mod text_document;
+
+pub mod service;
+pub mod store;
+
 pub mod features {
     pub mod folding;
 }
 
-pub mod store;
+#[cfg(target_arch = "wasm32")]
+pub mod wasm_text_document;

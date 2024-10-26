@@ -187,11 +187,11 @@ function takeObject(idx) {
     return ret;
 }
 /**
- * @param {any} source
+ * @param {any} document
  * @returns {any}
  */
-export function get_folding_ranges(source) {
-    const ret = wasm.get_folding_ranges(addHeapObject(source));
+export function get_folding_ranges(document) {
+    const ret = wasm.get_folding_ranges(addHeapObject(document));
     return takeObject(ret);
 }
 

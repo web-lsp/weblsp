@@ -1,6 +1,4 @@
-/target
-/packages/csslsrs/dist
+target
+packages/csslsrs/dist
 node_modules
-.vscode
-generated/*.wasm
-.zed
+**/generated/*.wasm

@@ -11,7 +11,7 @@ pub struct StoreEntry {
 }
 
 impl StoreEntry {
-    pub fn set_parsed_css(&mut self) {
+    pub fn update_css_tree_if_necessary(&mut self) {
         // If the CSS tree is not yet parsed, parse it
         if self.css_tree.is_none() {
             self.css_tree = Some(parse_css(&self.document.text));
@@ -22,6 +22,15 @@ impl StoreEntry {
         if self.document.version != self.last_parsed_version.unwrap() {
             self.css_tree = Some(parse_css(&self.document.text));
             self.last_parsed_version = Some(self.document.version);
+        }
+    }
+
+    // default
+    pub fn new(document: TextDocumentItem) -> Self {
+        Self {
+            document,
+            last_parsed_version: None,
+            css_tree: None,
         }
     }
 }
@@ -37,17 +46,18 @@ impl DocumentStore {
         }
     }
 
-    pub fn update_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
+    pub fn get_or_update_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
         let store_entry = self
             .documents
             .entry(document.uri.clone())
-            .or_insert(StoreEntry {
-                document,
-                last_parsed_version: None,
-                css_tree: None,
-            });
+            .and_modify(|entry| {
+                if document.version != entry.document.version {
+                    entry.document = document.clone(); // TODO: Figure out how to do this without cloning
+                }
+            })
+            .or_insert_with(|| StoreEntry::new(document));
 
-        store_entry.set_parsed_css();
+        store_entry.update_css_tree_if_necessary();
 
         store_entry
     }

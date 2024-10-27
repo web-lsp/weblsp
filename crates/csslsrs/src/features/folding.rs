@@ -48,7 +48,7 @@ impl LanguageService {
     ///
     /// * A vector of `FoldingRange` indicating the foldable regions in the CSS code.
     pub fn get_folding_ranges(mut self, document: TextDocumentItem) -> Vec<FoldingRange> {
-        let store_document = self.store.update_document(document);
+        let store_document = self.store.get_or_update_document(document);
         compute_folding_ranges(&store_document.document)
     }
 }

@@ -190,6 +190,15 @@ function takeObject(idx) {
  * @param {any} document
  * @returns {any}
  */
+export function get_folding_ranges(document) {
+    const ret = wasm.get_folding_ranges(addHeapObject(document));
+    return takeObject(ret);
+}
+
+/**
+ * @param {any} document
+ * @returns {any}
+ */
 export function get_document_colors(document) {
     const ret = wasm.get_document_colors(addHeapObject(document));
     return takeObject(ret);
@@ -203,15 +212,6 @@ export function get_document_colors(document) {
  */
 export function get_color_presentations(document, color, range) {
     const ret = wasm.get_color_presentations(addHeapObject(document), addHeapObject(color), addHeapObject(range));
-    return takeObject(ret);
-}
-
-/**
- * @param {any} document
- * @returns {any}
- */
-export function get_folding_ranges(document) {
-    const ret = wasm.get_folding_ranges(addHeapObject(document));
     return takeObject(ret);
 }
 

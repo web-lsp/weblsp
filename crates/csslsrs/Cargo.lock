@@ -280,6 +280,8 @@ name = "csslsrs"
 version = "0.1.0"
 dependencies = [
  "biome_css_parser",
+ "biome_css_syntax",
+ "biome_rowan",
  "console_error_panic_hook",
  "lsp-types",
  "serde",

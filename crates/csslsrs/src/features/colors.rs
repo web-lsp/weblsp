@@ -1,25 +1,53 @@
 use biome_css_parser::CssParse;
-use lsp_types::{ColorInformation, ColorPresentation, Range, TextDocumentItem};
+use biome_css_syntax::{CssLanguage, CssSyntaxKind};
+use biome_rowan::{AstNode, SyntaxNode};
+use lsp_types::{Color, ColorInformation, ColorPresentation, Position, Range, TextDocumentItem};
 
-use crate::{service::LanguageService, store::StoreEntry};
+use crate::service::LanguageService;
 
-fn find_document_colors(css: &CssParse) -> Vec<ColorInformation> {
-    vec![]
+pub fn extract_colors_information(node: &SyntaxNode<CssLanguage>) -> Vec<ColorInformation> {
+    let mut results = Vec::new();
+
+    // TODO: Also support normal CSS identifiers (e.g. "red", "blue", etc.)
+    if node.kind() == CssSyntaxKind::CSS_COLOR {
+        results.push(ColorInformation {
+            // TODO: Extract color information
+            color: Color {
+                red: 0.0,
+                green: 0.0,
+                blue: 0.0,
+                alpha: 0.0,
+            },
+            // TODO: Extract range information
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+        });
+    }
+
+    for child in node.children() {
+        results.extend(extract_colors_information(&child));
+    }
+
+    results
 }
 
-fn find_color_presentations(
-    _document: &TextDocumentItem,
-    _color: ColorInformation,
-    _range: Range,
-) -> Vec<ColorPresentation> {
-    todo!()
+fn find_document_colors(css: &CssParse) -> Vec<ColorInformation> {
+    let binding = css.tree().rules();
+    extract_colors_information(binding.syntax())
 }
 
 impl LanguageService {
     pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
-        let store_entry: &StoreEntry = self.store.update_document(document);
-
-        find_document_colors(store_entry.css_tree.as_ref().unwrap())
+        let store_entry = self.store.get_or_update_document(document);
+        find_document_colors(&store_entry.css_tree)
     }
 
     pub fn get_color_presentations(
@@ -28,9 +56,6 @@ impl LanguageService {
         _color: ColorInformation,
         _range: Range,
     ) -> Vec<ColorPresentation> {
-        //let store_entry = self.store.insert_or_get(document);
-        // find_color_presentations(&store_entry, color, range)
-
         todo!();
     }
 }
@@ -72,29 +97,27 @@ mod wasm_bindings {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::parser::parse_css;
+    use lsp_types::Uri;
     use std::str::FromStr;
 
-    use lsp_types::Uri;
-
-    use crate::parser::parse_css;
-
-    use super::*;
-
     #[test]
-    fn test_find_document_colors_empty() {
+    fn test_find_document_colors_basic() {
         let document = TextDocumentItem {
             uri: Uri::from_str("file:///test.css").unwrap(),
             language_id: "css".to_string(),
             version: 1,
-            text: "".to_string(),
+            text: "h1 { color: #000; }".to_string(),
         };
 
         let css = parse_css(&document.text);
         let document_colors = find_document_colors(&css);
 
         assert!(
-            document_colors.is_empty(),
-            "No document colors should be returned for empty input"
+            document_colors.len() == 1,
+            "Expected 1 color, found {}",
+            document_colors.len()
         );
     }
 }

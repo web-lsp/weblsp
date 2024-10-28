@@ -6,6 +6,8 @@ use crate::{converters::line_index::LineIndex, parser::parse_css};
 
 pub struct StoreEntry {
     pub document: TextDocumentItem,
+    // Calculating the offset of every line in a document is quite expensive, but is required for every conversion from
+    // offset to position (and vice versa). For this reason, we cache the line index here, updating it whenever the document is updated.
     pub(crate) line_index: LineIndex,
     pub css_tree: CssParse,
 }
@@ -35,8 +37,10 @@ impl DocumentStore {
         }
     }
 
+    /// Get a document from the store, updating it as well if necessary.
+    /// If the document is not in the store, it will be added.
     pub fn get_or_update_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
-        // TODO: Figure out how to do this without cloning the document on updates
+        // PERF: Figure out how to do this without cloning the document on updates
         let store_entry = self
             .documents
             .entry(document.uri.clone())

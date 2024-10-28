@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
+/// Convert a JS object to a TextDocumentItem.
 pub fn create_text_document(js_value: JsValue) -> TextDocumentItem {
     let js_text_document: JSTextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
 

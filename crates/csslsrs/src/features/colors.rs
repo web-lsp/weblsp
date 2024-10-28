@@ -16,10 +16,10 @@ pub(crate) fn extract_colors_information(
 ) -> Vec<ColorInformation> {
     let mut results = Vec::new();
 
-    // PERF: This should probably only check CSS identifiers in relevant contexts (e.g. property that expects a color)
-    // Good enough for now
     match node.kind() {
+        // PERF: This should probably only check CSS identifiers in relevant contexts (e.g. property that expects a color)
         CssSyntaxKind::CSS_IDENTIFIER => {
+            // If the identifier is a named color, parse it and add it to the results
             if let Some(color) = NAMED_COLORS
                 .get(&node.text().to_string())
                 .map(|color| csscolorparser::Color::from_rgba8(color[0], color[1], color[2], 255))
@@ -51,6 +51,8 @@ pub(crate) fn extract_colors_information(
         _ => {}
     }
 
+    // TODO: Handle CSS variables
+
     for child in node.children() {
         results.extend(extract_colors_information(&child, line_index, encoding));
     }
@@ -70,6 +72,7 @@ fn find_document_colors(
 impl LanguageService {
     pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
         let store_entry = self.store.get_or_update_document(document);
+
         find_document_colors(
             &store_entry.css_tree,
             &store_entry.line_index,

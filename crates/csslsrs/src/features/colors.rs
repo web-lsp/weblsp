@@ -56,7 +56,7 @@ impl LanguageService {
         _color: ColorInformation,
         _range: Range,
     ) -> Vec<ColorPresentation> {
-        todo!();
+        todo!("Implement get_color_presentations in colors.rs");
     }
 }
 
@@ -64,7 +64,7 @@ impl LanguageService {
 mod wasm_bindings {
     use crate::parser::parse_css;
 
-    use super::{find_color_presentations, find_document_colors};
+    use super::find_document_colors;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
@@ -83,15 +83,12 @@ mod wasm_bindings {
     const TS_APPEND_CONTENT: &'static str = r#"export async function get_color_presentations(source: import("vscode-languageserver-textdocument").TextDocument, color: import("vscode-languageserver-types").ColorInformation, range: import("vscode-languageserver-types").Range): Promise<import("vscode-languageserver-types").ColorPresentation[]>;"#;
 
     #[wasm_bindgen(skip_typescript)]
-    pub fn get_color_presentations(document: JsValue, color: JsValue, range: JsValue) -> JsValue {
-        let parsed_text_document = crate::wasm_text_document::create_text_document(document);
-        let parsed_color = serde_wasm_bindgen::from_value(color).unwrap();
-        let parsed_range = serde_wasm_bindgen::from_value(range).unwrap();
-
-        let color_presentations =
-            find_color_presentations(&parsed_text_document, parsed_color, parsed_range);
-
-        serde_wasm_bindgen::to_value(&color_presentations).unwrap()
+    pub fn get_color_presentations(
+        _document: JsValue,
+        _color: JsValue,
+        _range: JsValue,
+    ) -> JsValue {
+        todo!("Implement get_color_presentations in colors/wasm_bindings.rs");
     }
 }
 

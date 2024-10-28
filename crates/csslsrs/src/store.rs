@@ -7,19 +7,10 @@ use crate::{converters::line_index::LineIndex, parser::parse_css};
 pub struct StoreEntry {
     pub document: TextDocumentItem,
     pub(crate) line_index: LineIndex,
-    last_parsed_version: Option<i32>,
     pub css_tree: CssParse,
 }
 
 impl StoreEntry {
-    pub fn update_css_tree_if_necessary(&mut self) {
-        // If the document has been updated, re-parse the CSS tree
-        if self.last_parsed_version != Some(self.document.version) {
-            self.css_tree = parse_css(&self.document.text);
-            self.last_parsed_version = Some(self.document.version);
-        }
-    }
-
     pub(crate) fn new(
         document: TextDocumentItem,
         line_index: LineIndex,
@@ -28,7 +19,6 @@ impl StoreEntry {
         Self {
             document,
             line_index,
-            last_parsed_version: None,
             css_tree: parsed_css,
         }
     }
@@ -61,9 +51,8 @@ impl DocumentStore {
         if document.version != store_entry.document.version {
             store_entry.document = document.clone();
             store_entry.line_index = LineIndex::new(&document.text);
+            store_entry.css_tree = parse_css(&document.text);
         }
-
-        store_entry.update_css_tree_if_necessary();
 
         store_entry
     }

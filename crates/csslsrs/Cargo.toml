@@ -19,3 +19,4 @@ wasm-bindgen = { version = "0.2", optional = true }
 biome_css_syntax = "0.5.7"
 biome_rowan = "0.5.7"
 csscolorparser = "0.7.0"
+rustc-hash = "2.0.0"

@@ -1,6 +1,6 @@
 use biome_css_parser::CssParse;
 use lsp_types::{TextDocumentItem, Uri};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 use crate::parser::parse_css;
 
@@ -30,13 +30,13 @@ impl StoreEntry {
 }
 
 pub struct DocumentStore {
-    documents: HashMap<Uri, StoreEntry>,
+    documents: FxHashMap<Uri, StoreEntry>,
 }
 
 impl DocumentStore {
     pub fn new() -> Self {
         Self {
-            documents: HashMap::new(),
+            documents: FxHashMap::default(),
         }
     }
 

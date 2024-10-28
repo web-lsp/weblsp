@@ -2,7 +2,7 @@ use biome_css_parser::CssParse;
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use csscolorparser::{parse as parse_color, NAMED_COLORS};
-use lsp_types::{Color, ColorInformation, ColorPresentation, Position, Range, TextDocumentItem};
+use lsp_types::{Color, ColorInformation, ColorPresentation, Range, TextDocumentItem};
 
 use crate::{
     converters::{line_index::LineIndex, to_proto::range, PositionEncoding},
@@ -31,16 +31,7 @@ pub(crate) fn extract_colors_information(
                         blue: color.b,
                         alpha: color.a,
                     },
-                    range: Range {
-                        start: Position {
-                            line: 0,
-                            character: 0,
-                        },
-                        end: Position {
-                            line: 0,
-                            character: 0,
-                        },
-                    },
+                    range: range(line_index, node.text_range(), encoding).unwrap(),
                 });
             }
         }
@@ -139,7 +130,7 @@ mod wasm_bindings {
 mod tests {
     use super::*;
     use crate::parser::parse_css;
-    use lsp_types::Uri;
+    use lsp_types::{Position, Uri};
     use std::str::FromStr;
 
     #[test]

@@ -6,7 +6,7 @@ A CSS Language Service made with Rust.
 
 ## Features
 
-- [ ] Document store (needed for references between documents)
+- [x] Document store (needed for references between documents)
 - [x] CSS Parser (`biome-css-parser`)
 - [x] WASM support
 - Features

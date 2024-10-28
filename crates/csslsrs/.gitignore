@@ -1,4 +1,5 @@
 target
 packages/csslsrs/dist
 node_modules
-**/generated/*.wasm
+**/generated/*
+!**/generated/README.md

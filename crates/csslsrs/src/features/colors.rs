@@ -1,6 +1,7 @@
 use biome_css_parser::CssParse;
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
+use csscolorparser::{parse as parse_color, NAMED_COLORS};
 use lsp_types::{Color, ColorInformation, ColorPresentation, Position, Range, TextDocumentItem};
 
 use crate::service::LanguageService;
@@ -8,28 +9,57 @@ use crate::service::LanguageService;
 pub fn extract_colors_information(node: &SyntaxNode<CssLanguage>) -> Vec<ColorInformation> {
     let mut results = Vec::new();
 
-    // TODO: Also support normal CSS identifiers (e.g. "red", "blue", etc.)
-    if node.kind() == CssSyntaxKind::CSS_COLOR {
-        results.push(ColorInformation {
-            // TODO: Extract color information
-            color: Color {
-                red: 0.0,
-                green: 0.0,
-                blue: 0.0,
-                alpha: 0.0,
-            },
-            // TODO: Extract range information
-            range: Range {
-                start: Position {
-                    line: 0,
-                    character: 0,
-                },
-                end: Position {
-                    line: 0,
-                    character: 0,
-                },
-            },
-        });
+    // PERF: This should probably only check CSS identifiers in relevant contexts (e.g. property that expects a color)
+    // Good enough for now
+    match node.kind() {
+        CssSyntaxKind::CSS_IDENTIFIER => {
+            if let Some(color) = NAMED_COLORS
+                .get(&node.text().to_string())
+                .map(|color| csscolorparser::Color::from_rgba8(color[0], color[1], color[2], 255))
+            {
+                results.push(ColorInformation {
+                    color: Color {
+                        red: color.r,
+                        green: color.g,
+                        blue: color.b,
+                        alpha: color.a,
+                    },
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                    },
+                });
+            }
+        }
+        CssSyntaxKind::CSS_COLOR => {
+            if let Ok(color) = parse_color(&node.text().to_string()) {
+                results.push(ColorInformation {
+                    color: Color {
+                        red: color.r,
+                        green: color.g,
+                        blue: color.b,
+                        alpha: color.a,
+                    },
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 0,
+                        },
+                    },
+                });
+            }
+        }
+        _ => {}
     }
 
     for child in node.children() {
@@ -105,7 +135,7 @@ mod tests {
             uri: Uri::from_str("file:///test.css").unwrap(),
             language_id: "css".to_string(),
             version: 1,
-            text: "h1 { color: #000; }".to_string(),
+            text: "h1 { color: #fff; }".to_string(),
         };
 
         let css = parse_css(&document.text);
@@ -115,6 +145,28 @@ mod tests {
             document_colors.len() == 1,
             "Expected 1 color, found {}",
             document_colors.len()
+        );
+        assert_eq!(
+            document_colors[0],
+            ColorInformation {
+                color: Color {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                    alpha: 1.0,
+                },
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 12,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 16,
+                    },
+                },
+            },
+            "Unexpected color information"
         );
     }
 }

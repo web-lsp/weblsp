@@ -4,9 +4,16 @@ use biome_rowan::{AstNode, SyntaxNode};
 use csscolorparser::{parse as parse_color, NAMED_COLORS};
 use lsp_types::{Color, ColorInformation, ColorPresentation, Position, Range, TextDocumentItem};
 
-use crate::service::LanguageService;
+use crate::{
+    converters::{line_index::LineIndex, to_proto::range, PositionEncoding},
+    service::LanguageService,
+};
 
-pub fn extract_colors_information(node: &SyntaxNode<CssLanguage>) -> Vec<ColorInformation> {
+pub(crate) fn extract_colors_information(
+    node: &SyntaxNode<CssLanguage>,
+    line_index: &LineIndex,
+    encoding: PositionEncoding,
+) -> Vec<ColorInformation> {
     let mut results = Vec::new();
 
     // PERF: This should probably only check CSS identifiers in relevant contexts (e.g. property that expects a color)
@@ -46,16 +53,7 @@ pub fn extract_colors_information(node: &SyntaxNode<CssLanguage>) -> Vec<ColorIn
                         blue: color.b,
                         alpha: color.a,
                     },
-                    range: Range {
-                        start: Position {
-                            line: 0,
-                            character: 0,
-                        },
-                        end: Position {
-                            line: 0,
-                            character: 0,
-                        },
-                    },
+                    range: range(line_index, node.text_range(), encoding).unwrap(),
                 });
             }
         }
@@ -63,21 +61,29 @@ pub fn extract_colors_information(node: &SyntaxNode<CssLanguage>) -> Vec<ColorIn
     }
 
     for child in node.children() {
-        results.extend(extract_colors_information(&child));
+        results.extend(extract_colors_information(&child, line_index, encoding));
     }
 
     results
 }
 
-fn find_document_colors(css: &CssParse) -> Vec<ColorInformation> {
+fn find_document_colors(
+    css: &CssParse,
+    line_index: &LineIndex,
+    encoding: PositionEncoding,
+) -> Vec<ColorInformation> {
     let binding = css.tree().rules();
-    extract_colors_information(binding.syntax())
+    extract_colors_information(binding.syntax(), line_index, encoding)
 }
 
 impl LanguageService {
     pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
         let store_entry = self.store.get_or_update_document(document);
-        find_document_colors(&store_entry.css_tree)
+        find_document_colors(
+            &store_entry.css_tree,
+            &store_entry.line_index,
+            self.encoding,
+        )
     }
 
     pub fn get_color_presentations(
@@ -92,7 +98,10 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
-    use crate::parser::parse_css;
+    use crate::{
+        converters::{line_index::LineIndex, PositionEncoding},
+        parser::parse_css,
+    };
 
     use super::find_document_colors;
     use serde_wasm_bindgen;
@@ -104,7 +113,11 @@ mod wasm_bindings {
     #[wasm_bindgen(skip_typescript)]
     pub fn get_document_colors(document: JsValue) -> JsValue {
         let parsed_text_document = crate::wasm_text_document::create_text_document(document);
-        let document_colors = find_document_colors(&parse_css(&parsed_text_document.text));
+        let document_colors = find_document_colors(
+            &parse_css(&parsed_text_document.text),
+            &LineIndex::new(&parsed_text_document.text),
+            PositionEncoding::Wide(crate::converters::WideEncoding::Utf16),
+        );
 
         serde_wasm_bindgen::to_value(&document_colors).unwrap()
     }
@@ -139,34 +152,38 @@ mod tests {
         };
 
         let css = parse_css(&document.text);
-        let document_colors = find_document_colors(&css);
+        let document_colors = find_document_colors(
+            &css,
+            &LineIndex::new(&document.text),
+            PositionEncoding::Wide(crate::converters::WideEncoding::Utf16),
+        );
 
         assert!(
             document_colors.len() == 1,
             "Expected 1 color, found {}",
             document_colors.len()
         );
-        // assert_eq!(
-        //     document_colors[0],
-        //     ColorInformation {
-        //         color: Color {
-        //             red: 1.0,
-        //             green: 1.0,
-        //             blue: 1.0,
-        //             alpha: 1.0,
-        //         },
-        //         range: Range {
-        //             start: Position {
-        //                 line: 0,
-        //                 character: 12,
-        //             },
-        //             end: Position {
-        //                 line: 0,
-        //                 character: 16,
-        //             },
-        //         },
-        //     },
-        //     "Unexpected color information"
-        // );
+        assert_eq!(
+            document_colors[0],
+            ColorInformation {
+                color: Color {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                    alpha: 1.0,
+                },
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 12,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 16,
+                    },
+                },
+            },
+            "Unexpected color information"
+        );
     }
 }

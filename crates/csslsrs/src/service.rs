@@ -10,6 +10,10 @@ impl LanguageService {
             store: DocumentStore::new(),
         }
     }
+
+    pub fn new_with_store(store: DocumentStore) -> Self {
+        LanguageService { store }
+    }
 }
 
 impl Default for LanguageService {

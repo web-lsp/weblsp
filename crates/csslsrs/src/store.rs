@@ -2,10 +2,11 @@ use biome_css_parser::CssParse;
 use lsp_types::{TextDocumentItem, Uri};
 use rustc_hash::FxHashMap;
 
-use crate::parser::parse_css;
+use crate::{converters::line_index::LineIndex, parser::parse_css};
 
 pub struct StoreEntry {
     pub document: TextDocumentItem,
+    pub(crate) line_index: LineIndex,
     last_parsed_version: Option<i32>,
     pub css_tree: CssParse,
 }
@@ -19,10 +20,14 @@ impl StoreEntry {
         }
     }
 
-    // default
-    pub fn new(document: TextDocumentItem, parsed_css: CssParse) -> Self {
+    pub(crate) fn new(
+        document: TextDocumentItem,
+        line_index: LineIndex,
+        parsed_css: CssParse,
+    ) -> Self {
         Self {
             document,
+            line_index,
             last_parsed_version: None,
             css_tree: parsed_css,
         }
@@ -45,10 +50,17 @@ impl DocumentStore {
         let store_entry = self
             .documents
             .entry(document.uri.clone())
-            .or_insert_with(|| StoreEntry::new(document.clone(), parse_css(&document.text)));
+            .or_insert_with(|| {
+                StoreEntry::new(
+                    document.clone(),
+                    LineIndex::new(&document.text),
+                    parse_css(&document.text),
+                )
+            });
 
         if document.version != store_entry.document.version {
-            store_entry.document = document;
+            store_entry.document = document.clone();
+            store_entry.line_index = LineIndex::new(&document.text);
         }
 
         store_entry.update_css_tree_if_necessary();

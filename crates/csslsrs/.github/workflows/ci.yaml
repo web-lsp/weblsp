@@ -36,9 +36,8 @@ jobs:
 
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
-
-      - name: Setup Just
-        uses: extractions/setup-just@v1
+        with:
+          bins: just
 
       - name: Build
         run: just build

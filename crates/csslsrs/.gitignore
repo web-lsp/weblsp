@@ -3,3 +3,5 @@ packages/csslsrs/dist
 node_modules
 **/generated/*
 !**/generated/README.md
+
+.DS_Store

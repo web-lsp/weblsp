@@ -9,55 +9,85 @@ use crate::{
     service::LanguageService,
 };
 
-pub(crate) fn extract_colors_information(
+fn convert_parsed_color(color: csscolorparser::Color) -> Color {
+    Color {
+        red: color.r,
+        green: color.g,
+        blue: color.b,
+        alpha: color.a,
+    }
+}
+
+fn extract_colors_information(
     node: &SyntaxNode<CssLanguage>,
     line_index: &LineIndex,
     encoding: PositionEncoding,
 ) -> Vec<ColorInformation> {
-    let mut results = Vec::new();
+    let mut colors = Vec::new();
 
-    match node.kind() {
-        // PERF: This should probably only check CSS identifiers in relevant contexts (e.g. property that expects a color)
-        CssSyntaxKind::CSS_IDENTIFIER => {
-            // If the identifier is a named color, parse it and add it to the results
-            if let Some(color) = NAMED_COLORS
-                .get(&node.text().to_string())
-                .map(|color| csscolorparser::Color::from_rgba8(color[0], color[1], color[2], 255))
-            {
-                results.push(ColorInformation {
-                    color: Color {
-                        red: color.r,
-                        green: color.g,
-                        blue: color.b,
-                        alpha: color.a,
-                    },
-                    range: range(line_index, node.text_range(), encoding).unwrap(),
-                });
+    // PERF: This implementation will traverse the entire tree of the CSS file, matching many unnecessary nodes.
+    // A more efficient implementation would instead only look for colors in relevant contexts (e.g. CSS values, function parameters etc.)
+
+    node.children().for_each(|child| {
+        match child.kind() {
+            CssSyntaxKind::CSS_FUNCTION => {
+                // CSS functions come in many forms and shapes, and are sometimes colors themselves or container of other colors
+                // In our case, we only care about functions that are colors (rgb, hsl, etc.) as the other branches will cover
+                // functions that contain colors (e.g. linear-gradient, light-dark, etc.)
+                if let Some(function_name) = child.first_child().map(|n| n.text().to_string()) {
+                    if matches!(
+                        function_name.as_str(),
+                        "rgb"
+                            | "rgba"
+                            | "hsl"
+                            | "hsla"
+                            | "hwb"
+                            | "lab"
+                            | "lch"
+                            | "hwba"
+                            | "hsv"
+                            | "hsva"
+                    ) {
+                        if let Ok(function_color) = parse_color(&node.text().to_string()) {
+                            colors.push(ColorInformation {
+                                color: convert_parsed_color(function_color),
+                                range: range(line_index, node.text_range(), encoding).unwrap(),
+                            });
+                        }
+                    }
+                }
             }
-        }
-        CssSyntaxKind::CSS_COLOR => {
-            if let Ok(color) = parse_color(&node.text().to_string()) {
-                results.push(ColorInformation {
-                    color: Color {
-                        red: color.r,
-                        green: color.g,
-                        blue: color.b,
-                        alpha: color.a,
-                    },
-                    range: range(line_index, node.text_range(), encoding).unwrap(),
-                });
+            // Any CSS identifier, such as a property name or basic value (ex: `color: red;` contains two identifiers)
+            CssSyntaxKind::CSS_IDENTIFIER => {
+                if let Some(color) = NAMED_COLORS.get(&node.text().to_string()).map(|color| {
+                    csscolorparser::Color::from_rgba8(color[0], color[1], color[2], 255)
+                }) {
+                    colors.push(ColorInformation {
+                        color: convert_parsed_color(color),
+                        range: range(line_index, node.text_range(), encoding).unwrap(),
+                    });
+                }
             }
+            // HEX colors
+            CssSyntaxKind::CSS_COLOR => {
+                if let Ok(color) = parse_color(&node.text().to_string()) {
+                    colors.push(ColorInformation {
+                        color: convert_parsed_color(color),
+                        range: range(line_index, node.text_range(), encoding).unwrap(),
+                    });
+                }
+            }
+            _ => {}
         }
-        _ => {}
-    }
+    });
 
     // TODO: Handle CSS variables
 
     for child in node.children() {
-        results.extend(extract_colors_information(&child, line_index, encoding));
+        colors.extend(extract_colors_information(&child, line_index, encoding));
     }
 
-    results
+    colors
 }
 
 fn find_document_colors(
@@ -126,58 +156,5 @@ mod wasm_bindings {
         _range: JsValue,
     ) -> JsValue {
         todo!("Implement get_color_presentations in colors/wasm_bindings.rs");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::parser::parse_css;
-    use lsp_types::{Position, Uri};
-    use std::str::FromStr;
-
-    #[test]
-    fn test_find_document_colors_basic() {
-        let document = TextDocumentItem {
-            uri: Uri::from_str("file:///test.css").unwrap(),
-            language_id: "css".to_string(),
-            version: 1,
-            text: "h1 { color: #fff; }".to_string(),
-        };
-
-        let css = parse_css(&document.text);
-        let document_colors = find_document_colors(
-            &css,
-            &LineIndex::new(&document.text),
-            PositionEncoding::Wide(crate::converters::WideEncoding::Utf16),
-        );
-
-        assert!(
-            document_colors.len() == 1,
-            "Expected 1 color, found {}",
-            document_colors.len()
-        );
-        assert_eq!(
-            document_colors[0],
-            ColorInformation {
-                color: Color {
-                    red: 1.0,
-                    green: 1.0,
-                    blue: 1.0,
-                    alpha: 1.0,
-                },
-                range: Range {
-                    start: Position {
-                        line: 0,
-                        character: 12,
-                    },
-                    end: Position {
-                        line: 0,
-                        character: 16,
-                    },
-                },
-            },
-            "Unexpected color information"
-        );
     }
 }

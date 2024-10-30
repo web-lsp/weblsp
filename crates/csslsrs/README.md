@@ -6,7 +6,7 @@ A CSS Language Service made with Rust.
 
 ## Features
 
-- [x] Document store (needed for references between documents)
+- [x] Document store
 - [x] CSS Parser (`biome-css-parser`)
 - [x] WASM support
 - Features
@@ -20,7 +20,8 @@ A CSS Language Service made with Rust.
   - [ ] Code Actions
   - [ ] Code Lens
   - [ ] Rename
-  - [ ] Colors
+  - [x] Colors
+		- [ ] Color Presentation
   - [x] Folding
   - [ ] Selection Range
   - [ ] Validation

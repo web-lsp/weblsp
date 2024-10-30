@@ -13,7 +13,6 @@ describe("Folding", () => {
       {
         endLine: 3,
         startLine: 0,
-        kind: "region",
       },
     ] satisfies FoldingRange[]);
   });

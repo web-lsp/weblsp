@@ -25,5 +25,5 @@ rustc-hash = "2.0.0"
 criterion = { package = "codspeed-criterion-compat", version = "*" }
 
 [[bench]]
-name = "color"
+name = "bench_main"
 harness = false

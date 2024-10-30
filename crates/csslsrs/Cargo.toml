@@ -20,3 +20,10 @@ biome_css_syntax = "0.5.7"
 biome_rowan = "0.5.7"
 csscolorparser = { version = "0.7.0", features = ["lab"] }
 rustc-hash = "2.0.0"
+
+[dev-dependencies]
+criterion = { package = "codspeed-criterion-compat", version = "*" }
+
+[[bench]]
+name = "color"
+harness = false

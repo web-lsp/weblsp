@@ -1,8 +1,6 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
-import { get_folding_ranges } from "../../dist/index.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import type { FoldingRange } from "vscode-languageserver-types";
 import { get_document_colors } from "../../dist/generated/csslsrs.js";
 
 describe("Colors", () => {

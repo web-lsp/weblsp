@@ -28,6 +28,7 @@ jobs:
         with:
           channel: stable
           cache-target: release
+          targets: wasm32-unknown-unknown
           bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
 
       - name: Build (WASM)

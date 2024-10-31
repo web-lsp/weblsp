@@ -32,7 +32,7 @@ jobs:
           bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
 
       - name: Build (WASM)
-        run: just build-wasm
+        run: just build-wasm release
 
       - name: Build the benchmark target(s)
         run: cargo codspeed build
@@ -40,6 +40,5 @@ jobs:
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
         with:
-          run: cargo codspeed run
-            pnpm -C ./packages/benchmark-wasm run benchmark-codspeed
+          run: cargo codspeed run && pnpm -C ./packages/benchmark-wasm run benchmark-codspeed
           token: ${{ secrets.CODSPEED_TOKEN }}

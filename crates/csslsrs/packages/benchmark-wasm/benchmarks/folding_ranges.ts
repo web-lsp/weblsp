@@ -43,13 +43,22 @@ h4 {
 
 const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
 
-bench
-	.add("CSSLSRS - WASM", async () => {
+export function registerFoldingRangesBenchmarks(
+	bench: Bench,
+	onlyCSSLSRS: boolean
+): Bench {
+	bench.add("CSSLSRS(WASM) - Folding Ranges", async () => {
 		await get_folding_ranges(textDocument);
-	})
-	.add("vscode-css-languageservice", () => {
+	});
+
+	if (onlyCSSLSRS) return bench;
+
+	bench.add("vscode-css-languageservice - Folding Ranges", () => {
 		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
 		vscodeLanguageService.getFoldingRanges(textDocument, stylesheet);
 	});
 
-export default bench;
+	return bench;
+}
+
+export default registerFoldingRangesBenchmarks(bench, false);

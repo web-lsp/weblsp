@@ -14,12 +14,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v1
         with:
           channel: stable
           cache-target: release
-          bins: cargo-codspeed
+          bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
+
+      - name: Build (WASM)
+        run: just build-wasm
 
       - name: Build the benchmark target(s)
         run: cargo codspeed build
@@ -28,4 +40,5 @@ jobs:
         uses: CodSpeedHQ/action@v3
         with:
           run: cargo codspeed run
+            pnpm -C ./packages/benchmark-wasm run benchmark-codspeed
           token: ${{ secrets.CODSPEED_TOKEN }}

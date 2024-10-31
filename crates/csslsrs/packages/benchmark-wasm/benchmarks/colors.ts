@@ -26,13 +26,22 @@ h2 {
 
 const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
 
-bench
-	.add("CSSLSRS - WASM", async () => {
+export function registerColorBenchmarks(
+	bench: Bench,
+	onlyCSSLSRS: boolean
+): Bench {
+	bench.add("CSSLSRS(WASM) - Document colors", async () => {
 		await get_document_colors(textDocument);
-	})
-	.add("vscode-css-languageservice", () => {
+	});
+
+	if (onlyCSSLSRS) return bench;
+
+	bench.add("vscode-css-languageservice - Document colors", () => {
 		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
 		vscodeLanguageService.findDocumentColors(textDocument, stylesheet);
 	});
 
-export default bench;
+	return bench;
+}
+
+export default registerColorBenchmarks(bench, false);

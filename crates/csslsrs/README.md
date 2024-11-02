@@ -1,4 +1,7 @@
-# CSSlsrs
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./.github/assets/CSSlsrs_logo_dark.svg" />
+  <img alt="CSSlsrs logo" src="./.github/assets/CSSlsrs_logo_light.svg" />
+</picture>
 
 A CSS Language Service made with Rust.
 

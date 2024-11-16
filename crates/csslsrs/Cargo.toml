@@ -13,6 +13,7 @@ wasm = ["wasm-bindgen", "serde-wasm-bindgen", "console_error_panic_hook"]
 biome_css_parser = "0.5"
 lsp-types = "0.97"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.132"
 console_error_panic_hook = { version = "0.1.7", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
 wasm-bindgen = { version = "0.2", optional = true }

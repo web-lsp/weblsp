@@ -24,6 +24,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+        with:
+          bins: just
+
+      - name: Download CSS custom data
+        run: just fetch-data
+
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 

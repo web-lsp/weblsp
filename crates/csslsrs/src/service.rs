@@ -1,9 +1,20 @@
-use crate::{converters::PositionEncoding, store::DocumentStore};
+use crate::{converters::PositionEncoding, css_data::CssCustomData, store::DocumentStore};
+use serde_json;
+use std::sync::LazyLock;
 
 pub struct LanguageService {
     pub store: DocumentStore,
     pub encoding: PositionEncoding,
+    pub css_data: &'static CssCustomData,
 }
+
+static CSS_DATA: LazyLock<CssCustomData> =
+    LazyLock::new(
+        || match serde_json::from_str(include_str!("../data/css-schema.json")) {
+            Ok(data) => data,
+            Err(e) => panic!("Failed to parse CSS data: {}", e),
+        },
+    );
 
 impl LanguageService {
     /// Create a new LanguageService with a default DocumentStore and a custom PositionEncoding.
@@ -24,6 +35,7 @@ impl LanguageService {
         LanguageService {
             store: DocumentStore::new(),
             encoding,
+            css_data: &CSS_DATA,
         }
     }
 
@@ -47,7 +59,11 @@ impl LanguageService {
     /// ```
     ///
     pub fn new_with_store(store: DocumentStore, encoding: PositionEncoding) -> Self {
-        LanguageService { store, encoding }
+        LanguageService {
+            store,
+            encoding,
+            css_data: &CSS_DATA,
+        }
     }
 }
 

@@ -2,4 +2,8 @@ use criterion::criterion_main;
 
 mod features;
 
-criterion_main!(features::folding::benches, features::color::benches);
+criterion_main!(
+    features::folding::benches,
+    features::color::benches,
+    features::hover::benches
+);

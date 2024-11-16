@@ -24,10 +24,10 @@ A CSS Language Service made with Rust.
   - [ ] Code Lens
   - [ ] Rename
   - [x] Colors
-		- [ ] Color Presentation
+    - [x] Color Presentation
   - [x] Folding
   - [ ] Selection Range
   - [ ] Validation
 - [ ] Support for custom data
-- [ ] Benchmarks with `vscode-css-languageservice`
+- [x] Benchmarks with `vscode-css-languageservice`
 - [ ] Support for super-set of CSS (like SCSS, SASS, LESS)

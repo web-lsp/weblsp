@@ -1,7 +1,10 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { get_document_colors } from "../../dist/generated/csslsrs.js";
+import {
+	get_document_colors,
+	get_color_presentations,
+} from "../../dist/generated/csslsrs.js";
 
 describe("Colors", () => {
 	it("Can return document colors", async () => {
@@ -51,5 +54,22 @@ describe("Colors", () => {
 				},
 			},
 		]);
+	});
+
+	it("Can return color presentations", async () => {
+		const myDocument = TextDocument.create(
+			"file:///test.css",
+			"css",
+			0,
+			"body {\n    color: red;\n    background-color: #fff;\n}\n"
+		);
+		const colors = await get_document_colors(myDocument);
+		const color = colors[0];
+		const colorPresentations = await get_color_presentations(
+			color,
+			color.range
+		);
+
+		expect(colorPresentations).not.to.be.empty;
 	});
 });

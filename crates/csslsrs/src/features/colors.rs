@@ -1,22 +1,16 @@
 use biome_css_parser::CssParse;
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
-use csscolorparser::{parse as parse_color, NAMED_COLORS};
-use lsp_types::{Color, ColorInformation, ColorPresentation, Range, TextDocumentItem};
+use lsp_types::{ColorInformation, ColorPresentation, Range, TextDocumentItem, TextEdit};
+use palette::{Hsla, Hwba, Laba, Lcha, Srgba, WithAlpha};
 
 use crate::{
     converters::{line_index::LineIndex, to_proto::range, PositionEncoding},
+    features::color_parser::OPAQUE,
     service::LanguageService,
 };
 
-fn convert_parsed_color(color: csscolorparser::Color) -> Color {
-    Color {
-        red: color.r,
-        green: color.g,
-        blue: color.b,
-        alpha: color.a,
-    }
-}
+use super::color_parser::{parse_css_color, CSSColor, NAMED_COLORS};
 
 fn extract_colors_information(
     node: &SyntaxNode<CssLanguage>,
@@ -42,15 +36,15 @@ fn extract_colors_information(
                             | "hsl"
                             | "hsla"
                             | "hwb"
+                            | "hwba"
                             | "lab"
                             | "lch"
-                            | "hwba"
                             | "hsv"
                             | "hsva"
                     ) {
-                        if let Ok(function_color) = parse_color(&node.text().to_string()) {
+                        if let Some(color) = parse_css_color(&node.text().to_string()) {
                             colors.push(ColorInformation {
-                                color: convert_parsed_color(function_color),
+                                color: color.to_lsp_color(),
                                 range: range(line_index, node.text_range(), encoding).unwrap(),
                             });
                         }
@@ -59,20 +53,21 @@ fn extract_colors_information(
             }
             // Any CSS identifier, such as a property name or basic value (ex: `color: red;` contains two identifiers)
             CssSyntaxKind::CSS_IDENTIFIER => {
-                if let Some(color) = NAMED_COLORS.get(&node.text().to_string()).map(|color| {
-                    csscolorparser::Color::from_rgba8(color[0], color[1], color[2], 255)
-                }) {
+                if let Some(color) = NAMED_COLORS
+                    .get(&node.text().to_string())
+                    .map(|color| Srgba::new(color.red, color.green, color.blue, 255).into_format())
+                {
                     colors.push(ColorInformation {
-                        color: convert_parsed_color(color),
+                        color: color.to_lsp_color(),
                         range: range(line_index, node.text_range(), encoding).unwrap(),
                     });
                 }
             }
             // HEX colors
             CssSyntaxKind::CSS_COLOR => {
-                if let Ok(color) = parse_color(&node.text().to_string()) {
+                if let Some(color) = parse_css_color(&node.text().to_string()) {
                     colors.push(ColorInformation {
-                        color: convert_parsed_color(color),
+                        color: color.to_lsp_color(),
                         range: range(line_index, node.text_range(), encoding).unwrap(),
                     });
                 }
@@ -82,6 +77,7 @@ fn extract_colors_information(
     });
 
     // TODO: Handle CSS variables
+    // If a reference to a CSS variable that contains a color is found, we can provide a document color for the variable where it is used
 
     for child in node.children() {
         colors.extend(extract_colors_information(&child, line_index, encoding));
@@ -99,6 +95,51 @@ fn find_document_colors(
     extract_colors_information(binding.syntax(), line_index, encoding)
 }
 
+fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<ColorPresentation> {
+    let rgb_color = Srgba::from_lsp_color(color.color);
+
+    let mut color_texts: Vec<String> = vec![];
+
+    // Check for a named color with the same values
+    let named_color = NAMED_COLORS
+        .values()
+        .position(|&color| color == rgb_color.into_format::<u8, u8>().without_alpha());
+    let named_color_string = named_color.map(|i| NAMED_COLORS.keys().nth(i).unwrap());
+
+    if let Some(named_color_string) = named_color_string {
+        color_texts.push(named_color_string.to_string());
+    }
+
+    color_texts.extend(vec![
+        rgb_color.to_css(),
+        // Hex representation
+        {
+            let u8_color: Srgba<u8> = rgb_color.into_format();
+            if rgb_color.alpha == OPAQUE {
+                format!("#{:02x}", u8_color.without_alpha())
+            } else {
+                format!("#{:02x}", u8_color)
+            }
+        },
+        Hsla::from_lsp_color(color.color).to_css(),
+        Hwba::from_lsp_color(color.color).to_css(),
+        Laba::from_lsp_color(color.color).to_css(),
+        Lcha::from_lsp_color(color.color).to_css(),
+    ]);
+
+    color_texts
+        .into_iter()
+        .map(|text| ColorPresentation {
+            label: text.clone(),
+            text_edit: Some(TextEdit {
+                range,
+                new_text: text,
+            }),
+            additional_text_edits: None,
+        })
+        .collect()
+}
+
 impl LanguageService {
     pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
         let store_entry = self.store.get_or_update_document(document);
@@ -111,12 +152,11 @@ impl LanguageService {
     }
 
     pub fn get_color_presentations(
-        self,
-        _document: TextDocumentItem,
-        _color: ColorInformation,
-        _range: Range,
+        &self,
+        color: ColorInformation,
+        range: Range,
     ) -> Vec<ColorPresentation> {
-        todo!("Implement get_color_presentations in colors.rs");
+        compute_color_presentations(color, range)
     }
 }
 
@@ -127,7 +167,7 @@ mod wasm_bindings {
         parser::parse_css,
     };
 
-    use super::find_document_colors;
+    use super::{compute_color_presentations, find_document_colors};
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
@@ -147,14 +187,14 @@ mod wasm_bindings {
     }
 
     #[wasm_bindgen(typescript_custom_section)]
-    const TS_APPEND_CONTENT: &'static str = r#"export async function get_color_presentations(source: import("vscode-languageserver-textdocument").TextDocument, color: import("vscode-languageserver-types").ColorInformation, range: import("vscode-languageserver-types").Range): Promise<import("vscode-languageserver-types").ColorPresentation[]>;"#;
+    const TS_APPEND_CONTENT: &'static str = r#"export async function get_color_presentations(color: import("vscode-languageserver-types").ColorInformation, range: import("vscode-languageserver-types").Range): Promise<import("vscode-languageserver-types").ColorPresentation[]>;"#;
 
     #[wasm_bindgen(skip_typescript)]
-    pub fn get_color_presentations(
-        _document: JsValue,
-        _color: JsValue,
-        _range: JsValue,
-    ) -> JsValue {
-        todo!("Implement get_color_presentations in colors/wasm_bindings.rs");
+    pub fn get_color_presentations(color: JsValue, range: JsValue) -> JsValue {
+        let color = serde_wasm_bindgen::from_value(color).unwrap();
+        let range = serde_wasm_bindgen::from_value(range).unwrap();
+        let color_presentations = compute_color_presentations(color, range);
+
+        serde_wasm_bindgen::to_value(&color_presentations).unwrap()
     }
 }

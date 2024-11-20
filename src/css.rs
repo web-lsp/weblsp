@@ -5,6 +5,8 @@ use lsp_server::{Connection, ExtractError, Message, Request, Response};
 use lsp_types::request::HoverRequest;
 use std::error::Error;
 
+/// Initialize our CSS Language Service (CSSlsrs).
+/// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
 pub fn init_language_service() -> LanguageService {
     LanguageService::new(PositionEncoding::Utf8)
 }

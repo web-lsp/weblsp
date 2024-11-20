@@ -1,6 +1,6 @@
 pub mod css;
 use lsp_server::{Connection, ExtractError, Message, Request, RequestId};
-use lsp_types::{InitializeParams, OneOf, ServerCapabilities};
+use lsp_types::{HoverProviderCapability, InitializeParams, ServerCapabilities};
 use std::error::Error;
 
 /// Entry point for our WEBlsp server.
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
 
     // Run the server and wait for the two threads to end (typically by trigger LSP Exit event).
     let server_capabilities = serde_json::to_value(&ServerCapabilities {
-        definition_provider: Some(OneOf::Left(true)),
+        hover_provider: Some(HoverProviderCapability::Simple(true)),
         ..Default::default()
     })
     .unwrap();
@@ -66,16 +66,16 @@ fn main_loop(
                 }
                 eprintln!("got request: {req:?}");
                 // Segregate by language and dispatch to the appropriate handler.
+                // TODO: req.params.get("languageId") doesn't exist, I was just dreaming about it 😴
                 if let Some(language_id) = req.params.get("languageId") {
                     match language_id.as_str() {
                         Some("html") => {
                             eprintln!("HTML is not supported yet");
-                            css::handle_request(&mut css_language_service, &connection, req)?;
                         }
                         Some("css") => {
                             // Handle CSS request
                             eprintln!("Handling CSS request");
-                            // Your CSS handling logic here
+                            css::handle_request(&mut css_language_service, &connection, req)?;
                         }
                         _ => {
                             eprintln!("Unknown or unsupported language: {language_id}");
@@ -96,6 +96,10 @@ fn main_loop(
     Ok(())
 }
 
+/// Casts a request to a specific LSP request type.
+/// This function will attempt to cast the request to the specified LSP request type.
+/// If the request is not of the specified type, an error will be returned.
+/// If the request is of the specified type, the request ID and parameters will be returned.
 pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>
 where
     R: lsp_types::request::Request,

@@ -2,6 +2,8 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Represents any CSS data provided by the user or MDN.
+/// This is used to provide completions and hover information.
 pub struct CssCustomData {
     pub css: CssSection,
 }

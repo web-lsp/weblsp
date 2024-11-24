@@ -6,6 +6,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{converters::line_index::LineIndex, parser::parse_css};
 
+/// Store entry for a document in CSSlsrs' DocumentStore.
 pub struct StoreEntry {
     pub document: TextDocumentItem,
     // Calculating the offset of every line in a document is quite expensive, but is required for every conversion from
@@ -28,6 +29,7 @@ impl StoreEntry {
     }
 }
 
+/// A store for CSS documents in CSSlsrs.
 pub struct DocumentStore {
     documents: FxHashMap<Uri, StoreEntry>,
 }
@@ -68,6 +70,10 @@ impl DocumentStore {
 
     pub fn remove(&mut self, uri: &Uri) {
         self.documents.remove(uri);
+    }
+
+    pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {
+        self.documents.get(uri)
     }
 }
 

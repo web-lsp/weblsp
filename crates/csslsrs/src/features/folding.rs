@@ -4,13 +4,6 @@ use lsp_types::{FoldingRange, FoldingRangeKind, TextDocumentItem};
 
 /// Compute the folding ranges for the given CSS source code. It supports CSS blocks enclosed in
 /// braces, multi-line comments, and regions marked with `#region` and `#endregion` comments.
-///
-/// # Arguments
-/// `document` - The original CSS source code as a `TextDocumentItem`.
-/// `line_index` - The precomputed line index from StoreEntry.
-///
-/// # Returns
-/// A vector of `FoldingRange` indicating the foldable regions in the CSS code.
 fn compute_folding_ranges(
     document: &TextDocumentItem,
     line_index: &LineIndex,
@@ -173,12 +166,6 @@ fn compute_folding_ranges(
 impl LanguageService {
     /// Get the folding ranges for the given CSS source code. It supports CSS blocks enclosed in
     /// braces, multi-line comments, and regions marked with `#region` and `#endregion` comments.
-    ///
-    /// # Arguments
-    /// `document` - The original CSS source code as a `TextDocumentItem`.
-    ///
-    /// # Returns
-    /// A vector of `FoldingRange` indicating the foldable regions in the CSS code.
     pub fn get_folding_ranges(&mut self, document: TextDocumentItem) -> Vec<FoldingRange> {
         let store_document = self.store.get_or_update_document(document);
         compute_folding_ranges(&store_document.document, &store_document.line_index)

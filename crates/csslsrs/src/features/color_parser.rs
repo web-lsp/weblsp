@@ -334,12 +334,6 @@ impl CSSColor for Lcha {
 // The parser below is adapted from https://github.com/mazznoer/csscolorparser-rs/blob/660b1eebaee0da32c926db69c023d29694867b86/src/parser/mod.rs to instead return palette's color types
 
 /// Parses a string that might be a color in any supported CSS format (hex, rgb, hsl, hwb, lab, lch, named colors etc) into a palette color
-///
-/// # Arguments
-/// `text` - The string to parse
-///
-/// # Returns
-/// The parsed color as a trait wrapper object of a palette color, or None if the string couldn't be parsed
 pub fn parse_css_color(text: &str) -> Option<Box<dyn CSSColor>> {
     let text = text.trim().to_lowercase();
 
@@ -478,14 +472,6 @@ pub fn parse_css_color(text: &str) -> Option<Box<dyn CSSColor>> {
 
 // Strangely, Rust doesn't have a built-in function to map a value from one range to another.
 /// Maps a value from one range to another
-///
-/// # Arguments
-/// `from_range` - The range of the input value
-/// `to_range` - The range to map the input value to
-/// `s` - The value to map
-///
-/// # Returns
-/// The value mapped to the new range
 fn map_range<T>(from_range: (T, T), to_range: (T, T), s: T) -> T
 where
     T: Copy + Add<T, Output = T> + Sub<T, Output = T> + Mul<T, Output = T> + Div<T, Output = T>,
@@ -494,12 +480,6 @@ where
 }
 
 /// Parses a string that might be a percentage (ex: 32%) or a 0-1 float (ex: 0.32) or a "none" value
-///
-/// # Arguments
-/// `text` - The string to parse
-///
-/// # Returns
-/// The parsed value as a float (0-1), or None if the string couldn't be parsed
 fn parse_percent_or_float(text: &str) -> Option<f32> {
     if let Some(stripped) = text.strip_suffix('%') {
         stripped.parse().ok().map(|t: f32| t / 100.0)
@@ -514,12 +494,6 @@ fn parse_percent_or_float(text: &str) -> Option<f32> {
 
 /// Same as parse_percent_or_float, but returns a tuple with a boolean indicating if the value was a percentage, which is needed
 /// for percentages that will need to be remapped to a different range
-///
-/// # Arguments
-/// `text` - The string to parse
-///
-/// # Returns
-/// A tuple with the parsed value and a boolean indicating if the value was a percentage, or None if the string couldn't be parsed
 fn parse_remapped_percent_or_float(text: &str) -> Option<(f32, bool)> {
     if let Some(stripped) = text.strip_suffix('%') {
         stripped.parse().ok().map(|t: f32| (t / 100.0, true))
@@ -533,12 +507,6 @@ fn parse_remapped_percent_or_float(text: &str) -> Option<(f32, bool)> {
 }
 
 /// Parses a string that might be a percentage (ex: 32%) or a 0-255 float (ex: 128) or a "none" value
-///
-/// # Arguments
-/// `text` - The string to parse
-///
-/// # Returns
-/// The parsed value as a float (0-1), or None if the string couldn't be parsed
 fn parse_percent_or_255(text: &str) -> Option<f32> {
     if let Some(stripped) = text.strip_suffix('%') {
         stripped.parse().ok().map(|t: f32| t / 100.0)

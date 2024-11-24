@@ -1,14 +1,6 @@
 use biome_css_parser::{parse_css as biome_parse_css, CssParse, CssParserOptions};
 
 /// Parses CSS code and returns the parse result.
-///
-/// # Arguments
-///
-/// * `code` - A string slice that holds the CSS code to parse.
-///
-/// # Returns
-///
-/// * A `CssParse` struct containing the syntax tree and diagnostics.
 pub fn parse_css(code: &str) -> CssParse {
     // Create parser options
     let options = CssParserOptions::default();

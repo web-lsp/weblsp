@@ -1,14 +1,6 @@
 use biome_css_parser::CssParse;
 
 /// Analyzes the parsed CSS and returns the number of errors.
-///
-/// # Arguments
-///
-/// * `parse` - The `CssParse` result from parsing.
-///
-/// # Returns
-///
-/// * The number of errors found in the CSS code.
 pub fn analyze_css(parse: &CssParse) -> usize {
     parse.diagnostics().len()
 }

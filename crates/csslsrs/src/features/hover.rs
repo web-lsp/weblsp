@@ -9,18 +9,6 @@ use crate::{
 };
 
 /// Extracts hover information for the given CSS node and position.
-///
-/// # Arguments
-///
-/// * `node` - The CSS syntax node.
-/// * `position` - The cursor position in the document.
-/// * `line_index` - The precomputed line index from `StoreEntry`.
-/// * `encoding` - The position encoding.
-/// * `css_data` - The CSS custom data.
-///
-/// # Returns
-///
-/// An `Option<Hover>` containing the hover information, if available.
 fn extract_hover_information(
     node: &SyntaxNode<CssLanguage>,
     position: Position,
@@ -85,16 +73,6 @@ fn extract_hover_information(
 }
 
 /// Generates hover content for a given CSS entity using the provided CSS custom data.
-///
-/// # Arguments
-///
-/// * `kind` - The syntax kind of the CSS entity.
-/// * `name` - The name of the CSS entity.
-/// * `css_data` - The CSS custom data containing metadata.
-///
-/// # Returns
-///
-/// An `Option<String>` containing the formatted hover content in Markdown, or `None` if not found.
 fn get_css_hover_content(
     kind: CssSyntaxKind,
     name: &str,
@@ -152,20 +130,6 @@ fn get_css_hover_content(
 }
 
 /// Formats the CSS entry into a hover content string.
-///
-/// # Arguments
-///
-/// * `name` - The name of the CSS entity.
-/// * `desc` - An optional description of the entity.
-/// * `syntax` - An optional syntax string.
-/// * `specificity` - An optional specificity string.
-/// * `browsers` - An optional browsers string.
-/// * `reference` - An optional reference URL.
-/// * `restriction` - An optional restriction string.
-///
-/// # Returns
-///
-/// A `String` containing the formatted hover content in Markdown.
 fn format_css_entry(
     name: &str,
     desc: Option<&str>,
@@ -228,12 +192,6 @@ fn escape_markdown(text: &str) -> String {
 /// The specificity is returned as a tuple of (ids, classes, elements).
 /// Refer to the MDN documentation for more information:
 /// https://developer.mozilla.org/docs/Web/CSS/Specificity
-///
-/// # Arguments
-/// - `selector` - The CSS selector to calculate the specificity for.
-///
-/// # Returns
-/// A tuple containing the specificity of the selector as (ids, classes, elements).
 fn calculate_specificity(selector: &str) -> (u32, u32, u32) {
     let (mut ids, mut classes, mut elements) = (0, 0, 0);
 
@@ -352,16 +310,6 @@ fn is_identifier_char(c: char) -> bool {
 
 impl LanguageService {
     /// Gets the hover information for the given CSS document and position.
-    ///
-    /// # Arguments
-    ///
-    /// * `document` - The original CSS source code as a `TextDocumentItem`.
-    /// * `position` - The cursor position in the document.
-    /// * `css_data` - The CSS custom data.
-    ///
-    /// # Returns
-    ///
-    /// An `Option<Hover>` containing the hover information, if available.
     pub fn get_hover(
         &mut self,
         document: TextDocumentItem,

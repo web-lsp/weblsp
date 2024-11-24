@@ -1,14 +1,14 @@
 pub mod css;
+pub mod notifications;
+pub mod requests;
 use lsp_server::{Connection, ExtractError, Message, Request, RequestId};
-use lsp_types::{HoverProviderCapability, InitializeParams, ServerCapabilities};
+use lsp_types::{
+    HoverProviderCapability, InitializeParams, ServerCapabilities, TextDocumentSyncCapability,
+};
 use std::error::Error;
 
 /// Entry point for our WEBlsp server.
 /// Heavily inspired by -> https://github.com/rust-lang/rust-analyzer/blob/master/lib/lsp-server/examples/goto_def.rs
-/// This is a generic LSP server that can handle any LSP request.
-///
-/// # Returns
-/// - `Result<(), Box<dyn Error + Sync + Send>>` - A result that contains either `Ok(())` if the server was able to start and run successfully or an error if the server failed to start or run.
 fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
     // Note that we must have our logging only write out to stderr.
     eprintln!("starting generic LSP server");
@@ -20,6 +20,9 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
     // Run the server and wait for the two threads to end (typically by trigger LSP Exit event).
     let server_capabilities = serde_json::to_value(&ServerCapabilities {
         hover_provider: Some(HoverProviderCapability::Simple(true)),
+        text_document_sync: Some(TextDocumentSyncCapability::Kind(
+            lsp_types::TextDocumentSyncKind::FULL,
+        )),
         ..Default::default()
     })
     .unwrap();
@@ -43,13 +46,6 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
 }
 
 /// Main loop of our WEBlsp server. Handles all incoming messages, and dispatches them to the appropriate language handler.
-///
-/// # Arguments
-/// - `connection` - The connection to the client.
-/// - `params` - The initialization parameters.
-///
-/// # Returns
-/// - `Result<(), Box<dyn Error + Sync + Send>>` - A result that contains either `Ok(())` if the server was able to start and run successfully or an error if the server failed to start or run.
 fn main_loop(
     connection: Connection,
     params: serde_json::Value,
@@ -61,43 +57,29 @@ fn main_loop(
         eprintln!("got msg: {msg:?}");
         match msg {
             Message::Request(req) => {
-                if connection.handle_shutdown(&req)? {
-                    return Ok(());
-                }
-                eprintln!("got request: {req:?}");
-                // Segregate by language and dispatch to the appropriate handler.
-                // TODO: req.params.get("languageId") doesn't exist, I was just dreaming about it 😴
-                if let Some(language_id) = req.params.get("languageId") {
-                    match language_id.as_str() {
-                        Some("html") => {
-                            eprintln!("HTML is not supported yet");
-                        }
-                        Some("css") => {
-                            // Handle CSS request
-                            eprintln!("Handling CSS request");
-                            css::handle_request(&mut css_language_service, &connection, req)?;
-                        }
-                        _ => {
-                            eprintln!("Unknown or unsupported language: {language_id}");
-                        }
-                    }
-                } else {
-                    eprintln!("No languageId found in request");
-                }
+                requests::handle_request(req, &mut css_language_service, &connection)?;
+                continue;
             }
             Message::Response(resp) => {
-                eprintln!("got response: {resp:?}");
+                handle_response(resp)?;
+                continue;
             }
             Message::Notification(not) => {
-                eprintln!("got notification: {not:?}");
+                notifications::handle_notification(not, &mut css_language_service, &connection)?;
+                continue;
             }
         }
     }
     Ok(())
 }
 
-/// Casts a request to a specific LSP request type.
-/// This function will attempt to cast the request to the specified LSP request type.
+/// TMP: log the response.
+fn handle_response(resp: lsp_server::Response) -> Result<(), Box<dyn Error + Sync + Send>> {
+    eprintln!("got response: {resp:?}");
+    Ok(())
+}
+
+/// Attempts to cast a request to a specific LSP request type.
 /// If the request is not of the specified type, an error will be returned.
 /// If the request is of the specified type, the request ID and parameters will be returned.
 pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>

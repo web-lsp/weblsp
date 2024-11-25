@@ -11,14 +11,13 @@ pub fn handle_request(
     css_language_service: &mut csslsrs::service::LanguageService,
     connection: &Connection,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
-    eprintln!("got request: {req:?}");
     let language_id = get_language_id(&req, css_language_service)?;
     match language_id.as_str() {
         "css" => {
             css::handle_request(css_language_service, connection, req)?;
         }
         _ => {
-            eprintln!("Unsupported language: {}", language_id);
+            eprintln!("unsupported language: {}", language_id);
         }
     }
     Ok(())

@@ -11,7 +11,7 @@ use std::error::Error;
 /// Heavily inspired by -> https://github.com/rust-lang/rust-analyzer/blob/master/lib/lsp-server/examples/goto_def.rs
 fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
     // Note that we must have our logging only write out to stderr.
-    eprintln!("starting generic LSP server");
+    eprintln!("starting server");
 
     // Create the transport. Includes the stdio (stdin and stdout) versions but this could
     // also be implemented to use sockets or HTTP.
@@ -52,9 +52,8 @@ fn main_loop(
     mut css_language_service: csslsrs::service::LanguageService,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
     let _params: InitializeParams = serde_json::from_value(params).unwrap();
-    eprintln!("starting example main loop");
     for msg in &connection.receiver {
-        eprintln!("got msg: {msg:?}");
+        eprintln!("new msg: {msg:?}");
         match msg {
             Message::Request(req) => {
                 requests::handle_request(req, &mut css_language_service, &connection)?;
@@ -75,7 +74,7 @@ fn main_loop(
 
 /// TMP: log the response.
 fn handle_response(resp: lsp_server::Response) -> Result<(), Box<dyn Error + Sync + Send>> {
-    eprintln!("got response: {resp:?}");
+    eprintln!("handle_response: got {resp:?}");
     Ok(())
 }
 

@@ -20,7 +20,6 @@ pub fn handle_request(
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
     match cast::<HoverRequest>(req) {
         Ok((id, params)) => {
-            eprintln!("Match HoverRequest");
             // TODO: Move this to a separate function
             let position = params.text_document_position_params.position;
             let text_document_identifier = params.text_document_position_params.text_document;
@@ -33,7 +32,7 @@ pub fn handle_request(
                 position,
                 language_service.css_data,
             );
-            eprintln!("Hover: {:?}", hover);
+            eprintln!("handle_request: got hover -> {:?}", hover);
             let result = serde_json::to_value(&hover).unwrap();
             let resp = Response {
                 id,
@@ -43,7 +42,7 @@ pub fn handle_request(
             connection.sender.send(Message::Response(resp))?;
         }
         Err(e) => {
-            eprintln!("Failed to cast request: {:?}", e);
+            eprintln!("handle_request: failed to cast {:?}", e);
         }
     };
     Ok(())

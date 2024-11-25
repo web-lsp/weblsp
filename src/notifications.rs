@@ -9,35 +9,38 @@ pub fn handle_notification(
     css_language_service: &mut csslsrs::service::LanguageService,
     _connection: &Connection,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
-    eprintln!("got notification: {notification:?}");
-    let params: DidOpenTextDocumentParams =
-        serde_json::from_value(notification.params).map_err(|e| {
-            eprintln!("Failed to deserialize didOpen params: {:?}", e);
-            Box::<dyn Error + Sync + Send>::from("Invalid didOpen parameters")
-        })?;
     match notification.method.as_str() {
         "exit" => {
-            eprintln!("Exiting server");
+            eprintln!("exit: shutting down server");
             std::process::exit(0);
         }
         // didOpen notification carry a textDocument item, which contains the document's URI and languageId.
         // We can use this information to determine in wich Language Service's store we should add the document.
         "textDocument/didOpen" => {
-            eprintln!("Handling didOpen notification");
+            let params: DidOpenTextDocumentParams =
+                serde_json::from_value(notification.params).unwrap();
             match params.text_document.language_id.as_str() {
                 "css" => {
-                    eprintln!("Adding CSS document to CSS Language Service store");
+                    eprintln!(
+                        "textDocument/didOpen: adding CSS document to CSS Language Service store"
+                    );
                     css_language_service
                         .store
                         .get_or_update_document(params.text_document);
                 }
                 _ => {
-                    eprintln!("Unsupported language: {}", params.text_document.language_id);
+                    eprintln!(
+                        "textDocument/didOpen: unsupported language {}",
+                        params.text_document.language_id
+                    );
                 }
             }
         }
+        "textDocument/didChange" => {
+            eprintln!("textDocument/didChange: not implemented");
+        }
         _ => {
-            eprintln!("Unknown notification: {}", notification.method);
+            eprintln!("unknown notification: {}", notification.method);
         }
     }
     Ok(())

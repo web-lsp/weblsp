@@ -2,9 +2,7 @@ pub mod css;
 pub mod notifications;
 pub mod requests;
 use lsp_server::{Connection, ExtractError, Message, Request, RequestId};
-use lsp_types::{
-    HoverProviderCapability, InitializeParams, ServerCapabilities, TextDocumentSyncCapability,
-};
+use lsp_types::{InitializeParams, ServerCapabilities, TextDocumentSyncCapability};
 use std::error::Error;
 
 /// Entry point for our WEBlsp server.
@@ -19,7 +17,9 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
 
     // Run the server and wait for the two threads to end (typically by trigger LSP Exit event).
     let server_capabilities = serde_json::to_value(&ServerCapabilities {
-        hover_provider: Some(HoverProviderCapability::Simple(true)),
+        hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
+        color_provider: Some(lsp_types::ColorProviderCapability::Simple(true)),
+        folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
         text_document_sync: Some(TextDocumentSyncCapability::Kind(
             lsp_types::TextDocumentSyncKind::FULL,
         )),

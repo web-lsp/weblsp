@@ -1,5 +1,5 @@
 use lsp_server::Connection;
-use lsp_types::DidOpenTextDocumentParams;
+use lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams, TextDocumentItem};
 use std::error::Error;
 
 /// Used by the main loop to handle notifications. Notifications are messages that the client sends to the server.
@@ -14,9 +14,9 @@ pub fn handle_notification(
             eprintln!("exit: shutting down server");
             std::process::exit(0);
         }
-        // didOpen notification carry a textDocument item, which contains the document's URI and languageId.
-        // We can use this information to determine in wich Language Service's store we should add the document.
         "textDocument/didOpen" => {
+            // didOpen notification carry a textDocument item, which contains the document's URI and languageId.
+            // We can use this information to determine in wich Language Service's store we should add the document.
             let params: DidOpenTextDocumentParams =
                 serde_json::from_value(notification.params).unwrap();
             match params.text_document.language_id.as_str() {
@@ -37,7 +37,18 @@ pub fn handle_notification(
             }
         }
         "textDocument/didChange" => {
-            eprintln!("textDocument/didChange: not implemented");
+            // We need to update the document in the store with the new content at each change.
+            let params: DidChangeTextDocumentParams =
+                serde_json::from_value(notification.params).unwrap();
+            css_language_service
+                .store
+                .get_or_update_document(TextDocumentItem {
+                    uri: params.text_document.uri,
+                    language_id: "css".to_string(),
+                    version: params.text_document.version,
+                    // Since we only support full text sync, we can just take the first change.
+                    text: params.content_changes[0].text.clone(),
+                });
         }
         _ => {
             eprintln!("unknown notification: {}", notification.method);

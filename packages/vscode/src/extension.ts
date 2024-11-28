@@ -6,8 +6,6 @@ let client: lsp.LanguageClient
 
 /**
  * Turn on WEBlsp's vscode extension 🚀
- * @param context A collection of utilities private to our extension.
- * @returns A promise that resolves when the client has been activated.
  */
 export async function activate(context: vscode.ExtensionContext) {
   const serverExecutable = getServerExecutablePath(context)
@@ -44,7 +42,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 /**
  * Cut off WEBlsp's vscode extension 😢
- * @returns A promise that resolves when the client has been stopped.
  */
 export function deactivate(): Thenable<void> | undefined {
   if (!client) {
@@ -55,8 +52,6 @@ export function deactivate(): Thenable<void> | undefined {
 
 /**
  * Get the Rust WEBlsp binary path from the configuration.
- * @param context A collection of utilities private to our extension.
- * @returns The path to the Rust WEBlsp binary.
  */
 function getServerExecutablePath(context: vscode.ExtensionContext): string {
   const config = vscode.workspace.getConfiguration("cssLanguageServer")

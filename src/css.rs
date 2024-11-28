@@ -1,8 +1,7 @@
 use crate::cast;
 use csslsrs::converters::PositionEncoding;
 use csslsrs::service::LanguageService;
-use lsp_server::{Connection, ExtractError, Message, Request, Response};
-use lsp_types::request::HoverRequest;
+use lsp_server::{Connection, Message, Request, Response};
 use std::error::Error;
 
 /// Initialize our CSS Language Service (CSSlsrs).
@@ -13,42 +12,81 @@ pub fn init_language_service() -> LanguageService {
 
 /// Handle WEBlsp's CSS requests. This function will be called by the main loop when a CSS request is received,
 /// and will dispatch the request to our CSS Language Service (CSSlsrs).
-///
-/// # Arguments
-/// - `language_service` - The CSS Language Service.
-/// - `connection` - The connection to the client.
-/// - `req` - The request to be handled.
-///
-/// # Returns
-/// - `Result<(), Box<dyn Error + Sync + Send>>` - A result that contains either `Ok(())` if the request was handled successfully or an error if the request failed to be handled.
 pub fn handle_request(
     language_service: &mut LanguageService,
     connection: &Connection,
     req: Request,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
-    match cast::<HoverRequest>(req) {
-        Ok((id, params)) => {
-            let position = params.text_document_position_params.position;
-            let text_document_identifier = params.text_document_position_params.text_document;
-            let text_document = match language_service.store.get(&text_document_identifier.uri) {
-                Some(doc) => doc,
-                None => return Err(Box::from("Document not found")),
-            };
+    match req.method.as_str() {
+        "textDocument/documentColor" => {
+            let (id, params) = cast::<lsp_types::request::DocumentColor>(req)?;
+            let colors = language_service
+                .get_document_colors(get_text_document(params.text_document, language_service)?);
+            send_result(connection, id, serde_json::to_value(&colors).unwrap())?;
+        }
+        "textDocument/colorPresentation" => {
+            let (id, params) = cast::<lsp_types::request::ColorPresentationRequest>(req)?;
+            let presentations = language_service.get_color_presentations(
+                lsp_types::ColorInformation {
+                    color: params.color,
+                    range: params.range,
+                },
+                // Erika se fout de ma gueule
+                params.range,
+            );
+            send_result(
+                connection,
+                id,
+                serde_json::to_value(&presentations).unwrap(),
+            )?;
+        }
+        "textDocument/foldingRange" => {
+            let (id, params) = cast::<lsp_types::request::FoldingRangeRequest>(req)?;
+            let ranges = language_service
+                .get_folding_ranges(get_text_document(params.text_document, language_service)?);
+            send_result(connection, id, serde_json::to_value(&ranges).unwrap())?;
+        }
+        "textDocument/hover" => {
+            let (id, params) = cast::<lsp_types::request::HoverRequest>(req)?;
             let hover = language_service.get_hover(
-                text_document.document.clone(),
-                position,
+                get_text_document(
+                    params.text_document_position_params.text_document,
+                    language_service,
+                )?,
+                params.text_document_position_params.position,
                 language_service.css_data,
             );
-            let response = Response::new_ok(id, hover);
-            connection.sender.send(Message::Response(response))?;
+            send_result(connection, id, serde_json::to_value(&hover).unwrap())?;
         }
-        // Handle JSON error
-        Err(err @ ExtractError::JsonError { .. }) => panic!("{err:?}"),
-        Err(ExtractError::MethodMismatch(_req)) => {
-            // Handle method mismatch error
-            return Err(Box::from("Method mismatch error"));
+        _ => {
+            eprintln!("handle_request: unsupported request: {}", req.method);
         }
+    }
+    Ok(())
+}
+
+fn get_text_document(
+    text_document_identifier: lsp_types::TextDocumentIdentifier,
+    language_service: &LanguageService,
+) -> Result<lsp_types::TextDocumentItem, Box<dyn Error + Sync + Send>> {
+    let text_document = match language_service.store.get(&text_document_identifier.uri) {
+        Some(doc) => doc,
+        None => return Err(Box::from("Document not found")),
     };
-    // Handle other requests here
+
+    Ok(text_document.document.clone())
+}
+
+fn send_result(
+    connection: &Connection,
+    id: lsp_server::RequestId,
+    result: serde_json::Value,
+) -> Result<(), Box<dyn Error + Sync + Send>> {
+    let resp = Response {
+        id,
+        result: Some(result),
+        error: None,
+    };
+    connection.sender.send(Message::Response(resp))?;
     Ok(())
 }

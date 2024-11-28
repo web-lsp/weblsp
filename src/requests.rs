@@ -24,7 +24,7 @@ pub fn handle_request(
 }
 
 // TMP: TODO: For now, we use CSSlsrs' store, because we only support CSS. So I can just retrieve the document from this store from its URI.
-// Soon, WEBlsp will support multiple languages, and have its own store. The document will be retrieved from this store instead, and the stores for each language will be created with LANGlsrs::new_with_store() instead of LANGlsrs::new().
+// Soon, WEBlsp will support multiple languages, and have its own store. The document will be retrieved from this store instead, and the language services for each language will be created with LANGlsrs::new_with_store() instead of LANGlsrs::new().
 // See issue -> https://github.com/web-lsp/weblsp/issues/1
 /// Since requests only carry the document's URI, we need to extract the language ID from the store.
 fn get_language_id(

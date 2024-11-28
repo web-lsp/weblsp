@@ -49,12 +49,12 @@ fn assert_hover(text_with_cursor: &str, expected_hover: Hover) {
     assert_eq!(
         hover,
         Some(expected_hover),
-        "Le résultat du hover ne correspond pas à l'attendu"
+        "Hover did not match expected hover."
     );
 }
 
 #[test]
-fn test_hover_over_color_property() {
+fn test_hover_over_color_property_inline() {
     let css_text = ".test { |color: blue; }";
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
@@ -64,6 +64,23 @@ fn test_hover_over_color_property() {
         range: Some(Range {
             start: Position { line: 0, character: 8 },
             end: Position { line: 0, character: 13 },
+        }),
+    };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[test]
+fn test_hover_over_color_property() {
+    let css_text = ".test {\n  col|or: blue;\n}\n";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `body { $(name): red; }`\n\n**Restriction**: color\n\n**Supported Browsers**:\n- all\n\n**Reference**:\n- [color](http://www.w3.org/TR/css3-color/#foreground)\n\n".to_string(),
+        }),
+        range: Some(Range {
+            start: Position { line: 1, character: 2 },
+            end: Position { line: 1, character: 7 },
         }),
     };
 
@@ -82,7 +99,7 @@ fn test_hover_over_universal_selector() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 2 },
+            end: Position { line: 0, character: 1 },
         }),
     };
 
@@ -99,7 +116,7 @@ fn test_hover_over_element_selector() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 5 },
+            end: Position { line: 0, character: 4 },
         }),
     };
 
@@ -116,7 +133,7 @@ fn test_hover_over_compound_selector() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 7 },
+            end: Position { line: 0, character: 6 },
         }),
     };
 
@@ -133,7 +150,7 @@ fn test_hover_over_descendant_selector() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 12 },
+            end: Position { line: 0, character: 11 },
         }),
     };
 
@@ -167,7 +184,7 @@ fn test_hover_over_complex_selector_in_list() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 15 },
-            end: Position { line: 0, character: 39 },
+            end: Position { line: 0, character: 38 },
         }),
     };
 
@@ -184,7 +201,7 @@ fn test_hover_with_escaped_characters() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 8 },
+            end: Position { line: 0, character: 7 },
         }),
     };
 
@@ -201,7 +218,7 @@ fn test_hover_with_unicode_characters() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 9 },
+            end: Position { line: 0, character: 8 },
         }),
     };
 
@@ -219,7 +236,7 @@ fn test_hover_with_escaped_brackets() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 15 },
+            end: Position { line: 0, character: 14 },
         }),
     };
 
@@ -237,7 +254,7 @@ fn test_hover_with_escaped_colon() {
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
-            end: Position { line: 0, character: 14 },
+            end: Position { line: 0, character: 13 },
         }),
     };
 

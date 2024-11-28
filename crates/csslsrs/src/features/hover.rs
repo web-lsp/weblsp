@@ -34,16 +34,15 @@ fn extract_hover_information(
             }
             CssSyntaxKind::CSS_IDENTIFIER => {
                 // Handle identifiers like properties or at-rules
-                let entity_name = token.text().to_string();
                 if let Some(hover_content) =
-                    get_css_hover_content(ancestor.kind(), &entity_name, css_data)
+                    get_css_hover_content(ancestor.kind(), token.text().trim(), css_data)
                 {
                     return Some(Hover {
                         contents: HoverContents::Markup(MarkupContent {
                             kind: MarkupKind::Markdown,
                             value: hover_content,
                         }),
-                        range: range(line_index, ancestor.text_range(), encoding).ok(),
+                        range: range(line_index, ancestor.text_trimmed_range(), encoding).ok(),
                     });
                 }
             }
@@ -55,16 +54,17 @@ fn extract_hover_information(
 
     // Use the identified selector node for hover content
     if let Some(selector_node) = selector_node {
-        let selector_text = selector_node.text().to_string();
-        if let Some(hover_content) =
-            get_css_hover_content(selector_node.kind(), selector_text.trim(), css_data)
-        {
+        if let Some(hover_content) = get_css_hover_content(
+            selector_node.kind(),
+            selector_node.text().to_string().trim(),
+            css_data,
+        ) {
             return Some(Hover {
                 contents: HoverContents::Markup(MarkupContent {
                     kind: MarkupKind::Markdown,
                     value: hover_content,
                 }),
-                range: range(line_index, selector_node.text_range(), encoding).ok(),
+                range: range(line_index, selector_node.text_trimmed_range(), encoding).ok(),
             });
         }
     }

@@ -33,7 +33,7 @@ describe("Hover", () => {
         },
         end: {
           line: 0,
-          character: 5,
+          character: 4,
         },
       },
     })

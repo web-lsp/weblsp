@@ -9,25 +9,22 @@ A CSS Language Service made with Rust.
 
 ## Features
 
-- [x] Document store
-- [x] CSS Parser (`biome-css-parser`)
-- [x] WASM support
-- Features
-  - [ ] Hover
-  - [ ] Completion
-    - [ ] Path completion
-  - [ ] Definition
-  - [ ] References
-  - [ ] Document Symbols
-  - [ ] Document Highlights
-  - [ ] Code Actions
-  - [ ] Code Lens
-  - [ ] Rename
-  - [x] Colors
-    - [x] Color Presentation
-  - [x] Folding
-  - [ ] Selection Range
-  - [ ] Validation
-- [ ] Support for custom data
-- [x] Benchmarks with `vscode-css-languageservice`
-- [ ] Support for super-set of CSS (like SCSS, SASS, LESS)
+| Feature             | CSSlsrs | VScode | Differences            |
+| ------------------- | ------- | ------ | ---------------------- |
+| Hover               | 🟨       | ✅      | Lacks HTML previews    |
+| Completion          | ❌       | ✅      | -                      |
+| Path completion     | ❌       | ✅      | -                      |
+| Definition          | ❌       | ✅      | -                      |
+| References          | ❌       | ✅      | -                      |
+| Document Symbols    | ❌       | ✅      | -                      |
+| Document Highlights | ❌       | ✅      | -                      |
+| Code Actions        | ❌       | ✅      | -                      |
+| Code Lens           | ❌       | ✅      | -                      |
+| Rename              | ❌       | ✅      | -                      |
+| Colors              | ✅       | ✅      | -                      |
+| Color Presentation  | ✅       | ✅      | Supports for LCH & Lab |
+| Folding             | ✅       | ✅      | -                      |
+| Selection Range     | ❌       | ✅      | -                      |
+| Validation          | ❌       | ✅      | -                      |
+| Custom data         | ❌       | ✅      | -                      |
+| Super-set of CSS    | ❌       | ✅      | -                      |

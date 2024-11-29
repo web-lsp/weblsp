@@ -15,7 +15,7 @@ A better Language Server for the Web, made with Rust.
 - [ ] HTML Language Service (HTMLlsrs) integration
 - [ ] Publish VSCode extension
 
-## Usefull commands
+## Useful commands
 
 - `cargo build` - Build the project
 - `cd ./packages/vscode && pnpm run compile` - Compile the vscode extension

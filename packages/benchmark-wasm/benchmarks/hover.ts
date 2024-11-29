@@ -2,7 +2,7 @@ import { Bench } from "tinybench"
 import { get_hover } from "../../csslsrs/dist/generated/csslsrs"
 import { getCSSLanguageService } from "vscode-css-languageservice"
 import { TextDocument } from "vscode-languageserver-textdocument"
-import cssCustomData from "../../../data/css-schema.json"
+import cssCustomData from "../../../crates/csslsrs/data/css-schema.json"
 
 const bench = new Bench({ name: "Hover", time: 100 })
 

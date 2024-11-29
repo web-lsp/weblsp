@@ -1,8 +1,8 @@
 import { describe, it } from "mocha"
 import { expect } from "chai"
 import { TextDocument } from "vscode-languageserver-textdocument"
-import { get_hover } from "../../dist/index.js"
-import cssCustomData from "../../../../data/css-schema.json"
+import { get_hover } from "../../../csslsrs/dist/index"
+import cssCustomData from "../../../../crates/csslsrs/data/css-schema.json"
 
 describe("Hover", () => {
   it("Can return hover", async () => {

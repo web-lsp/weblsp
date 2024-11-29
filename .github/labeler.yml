@@ -1,0 +1,24 @@
+# See https://github.com/actions/labeler
+"documentation":
+  - docs/**
+
+"crt:csslsrs":
+  - crates/csslsrs/**
+
+"crt:weblsp":
+  - crates/weblsp/**
+
+"pkg:csslsrs":
+  - packages/csslsrs/**
+
+"pkg:vscode":
+  - packages/vscode/**
+
+"devops":
+  - .github/**
+  - .vscode/**
+  - .zed/**
+  - .editorconfig
+  - .gitignore
+  - justfile
+  - pnpm-workspace.yaml

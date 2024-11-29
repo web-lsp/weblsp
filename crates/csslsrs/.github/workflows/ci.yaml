@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+# Automatically cancel older in-progress jobs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request_target' && github.head_ref || github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+
+env:
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+        with:
+          bins: just
+
+      - name: Download CSS custom data
+        run: just fetch-data
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+        with:
+          bins: just
+
+      - name: Build
+        run: just build
+
+  build-wasm:
+    name: Build (WASM)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+        with:
+          targets: wasm32-unknown-unknown
+          bins: wasm-bindgen-cli, just, wasm-opt
+
+      - name: Build
+        run: just build-wasm
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Setup Rust
+        uses: moonrepo/setup-rust@v1
+        with:
+          targets: wasm32-unknown-unknown
+          bins: wasm-bindgen-cli, just, wasm-opt
+
+      - name: Build (WASM)
+        run: just build-wasm
+
+      - name: Test
+        run: just test

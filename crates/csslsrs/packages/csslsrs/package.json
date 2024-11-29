@@ -1,0 +1,37 @@
+{
+  "name": "csslsrs",
+  "version": "0.1.1",
+  "type": "module",
+  "description": "",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "prepublishOnly": "just build-wasm release && pnpm run build",
+    "build": "node ./build.js && tsc",
+    "test": "mocha --require tsx test/**/*.test.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@8.12.0+sha512.279278f83be782f6faaefbacbccc503301c4ec2cdafd40983e7c26aeeee7c38270f5c8e635b43464691b897abe1675b40c06df6edadde922532b7368aa9a5267",
+  "dependencies": {
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-languageserver-types": "^3.17.5"
+  },
+  "devDependencies": {
+    "@types/chai": "^5.0.0",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "^22.8.0",
+    "chai": "^5.1.2",
+    "mocha": "^10.7.3",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

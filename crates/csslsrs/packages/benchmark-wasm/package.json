@@ -1,0 +1,23 @@
+{
+  "name": "benchmark-wasm",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "benchmark": "tsx index.ts",
+    "benchmark-codspeed": "tsx codspeed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@codspeed/tinybench-plugin": "^3.1.1",
+    "csslsrs": "workspace:*",
+    "tinybench": "^3.0.3",
+    "tsx": "^4.19.1",
+    "vscode-css-languageservice": "^6.3.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  }
+}

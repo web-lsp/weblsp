@@ -1,0 +1,31 @@
+[package]
+name = "csslsrs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+wasm = ["wasm-bindgen", "serde-wasm-bindgen", "console_error_panic_hook"]
+
+[dependencies]
+biome_css_parser = "0.5"
+lsp-types = "0.97"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.132"
+console_error_panic_hook = { version = "0.1.7", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+biome_css_syntax = "0.5.7"
+biome_rowan = "0.5.7"
+rustc-hash = "2.0.0"
+palette = "0.7.6"
+phf = "0.11.2"
+
+[dev-dependencies]
+criterion = { package = "codspeed-criterion-compat", version = "*" }
+
+[[bench]]
+name = "bench_main"
+harness = false

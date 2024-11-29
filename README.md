@@ -7,15 +7,21 @@ A better Language Server for the Web, made with Rust.
 
 (Work In Progress) ~~It provides full-featured language support for HTML and CSS, including syntax highlighting, code completion, error checking, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), WEBlsp is designed to work with any IDE that supports LSP. Build on top of ~~HTMLlsrs~~ and [CSSlsrs](https://github.com/web-lsp/csslsrs), our own modern, fast, and reliable Language Services.
 
-## TODO
+## Crates
 
-- [x] LSP basic server
-- [ ] Handle request by language (HTML, CSS)
-- [x] CSS Language Service (CSSlsrs) integration
-- [ ] HTML Language Service (HTMLlsrs) integration
-- [ ] Publish VSCode extension
+WEBlsp is a monorepo that contains the following crates (Rust packages):
 
-## Usefull commands
+| Name      | Description              | Crates.io | README                                  |
+| --------- | ------------------------ | --------- | --------------------------------------- |
+| `weblsp`  | The main Language Server | WIP       | [README.md](./crates/weblsp/README.md)  |
+| `csslsrs` | CSS Language Service     | WIP       | [README.md](./crates/csslsrs/README.md) |
 
-- `cargo build` - Build the project
-- `cd ./packages/vscode && pnpm run compile` - Compile the vscode extension
+## Packages
+
+Additionally, WEBlsp contains the following NPM packages (JavaScript packages):
+
+| Name             | Description               | NPM | README                                           |
+| ---------------- | ------------------------- | --- | ------------------------------------------------ |
+| `vscode`         | WEBlsp VSCode extension   | WIP | [README.md](./packages/vscode/README.md)         |
+| `csslsrs`        | WASM CSS Language Service | WIP | [README.md](./packages/csslsrs/README.md)        |
+| `benchmark-wasm` | Benchmark WASM packages   | WIP | [README.md](./packages/benchmark-wasm/README.md) |

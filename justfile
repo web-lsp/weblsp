@@ -20,8 +20,8 @@ build-wasm mode=default_mode:
 
 fetch-data:
 	echo "Fetching CSS properties data..."
-	mkdir -p ./data
-	curl -L -o ./data/css-schema.json https://raw.githubusercontent.com/microsoft/vscode-custom-data/main/web-data/css/css-schema.json
+	mkdir -p ./crates/csslsrs/data
+	curl -L -o ./crates/csslsrs/data/css-schema.json https://raw.githubusercontent.com/microsoft/vscode-custom-data/main/web-data/css/css-schema.json
 
 test:
 	echo "Running Rust tests..."

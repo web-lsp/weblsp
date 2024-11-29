@@ -1,9 +1,8 @@
 target
 packages/csslsrs/dist
 node_modules
-out
 **/generated/*
 !**/generated/README.md
-data/*
+data
 
 .DS_Store

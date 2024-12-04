@@ -34,12 +34,14 @@ h1 > span {
 	bench("CSSLSRS(WASM) - Hover", async () => {
 		await get_hover(textDocument, { line: 4, character: 3 }, cssCustomData);
 	});
-	bench("vscode-css-languageservice - Hover", () => {
-		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
-		vscodeLanguageService.doHover(
-			textDocument,
-			{ line: 4, character: 3 },
-			stylesheet
-		);
-	});
+	if (!process.env.CODSPEED) {
+		bench("vscode-css-languageservice - Hover", () => {
+			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
+			vscodeLanguageService.doHover(
+				textDocument,
+				{ line: 4, character: 3 },
+				stylesheet
+			);
+		});
+	}
 });

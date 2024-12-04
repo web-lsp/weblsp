@@ -39,13 +39,16 @@ describe("Color Presentations", async () => {
 	bench("CSSLSRS(WASM) - Color Presentations", () => {
 		get_color_presentations(color, color.range);
 	});
-	bench("vscode-css-languageservice - Color Presentations", () => {
-		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
-		vscodeLanguageService.getColorPresentations(
-			textDocument,
-			stylesheet,
-			color.color,
-			color.range
-		);
-	});
+
+	if (!process.env.CODSPEED) {
+		bench("vscode-css-languageservice - Color Presentations", () => {
+			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
+			vscodeLanguageService.getColorPresentations(
+				textDocument,
+				stylesheet,
+				color.color,
+				color.range
+			);
+		});
+	}
 });

@@ -6,7 +6,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "benchmark": "pnpm exec vitest bench"
+    "benchmark": "pnpm exec vitest bench",
+		"benchmark-codspeed": "CODSPEED=true pnpm exec vitest bench"
   },
   "keywords": [],
   "author": "",

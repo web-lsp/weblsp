@@ -45,8 +45,10 @@ describe("Folding Ranges", async () => {
 	bench("CSSLSRS(WASM) - Folding Ranges", async () => {
 		await get_folding_ranges(textDocument);
 	});
-	bench("vscode-css-languageservice - Folding Ranges", () => {
-		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
-		vscodeLanguageService.getFoldingRanges(textDocument, stylesheet);
-	});
+	if (!process.env.CODSPEED) {
+		bench("vscode-css-languageservice - Folding Ranges", () => {
+			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
+			vscodeLanguageService.getFoldingRanges(textDocument, stylesheet);
+		});
+	}
 });

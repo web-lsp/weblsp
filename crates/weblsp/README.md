@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./.github/assets/WEBlsp_logo_dark.svg" />
-  <img alt="WEBlsp logo" src="./.github/assets/WEBlsp_logo_light.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/WEBlsp_logo_dark.svg" />
+  <img alt="WEBlsp logo" src=".../../.github/assets/WEBlsp_logo_light.svg" />
 </picture>
 
 A better Language Server for the Web, made with Rust.

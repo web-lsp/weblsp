@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  CODSPEED: true
+
 jobs:
   benchmarks:
     name: Run benchmarks
@@ -32,7 +35,7 @@ jobs:
           bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
 
       - name: Build (WASM)
-        run: just build-wasm release
+        run: just build-wasm benchmark
 
       - name: Build the benchmark target(s)
         run: cargo codspeed build

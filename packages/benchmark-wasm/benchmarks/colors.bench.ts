@@ -29,10 +29,12 @@ describe("Document colors", async () => {
 	bench("CSSLSRS(WASM) - Document colors", async () => {
 		await get_document_colors(textDocument);
 	});
-	bench("vscode-css-languageservice - Document colors", () => {
-		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
-		vscodeLanguageService.findDocumentColors(textDocument, stylesheet);
-	});
+	if (!process.env.CODSPEED) {
+		bench("vscode-css-languageservice - Document colors", () => {
+			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
+			vscodeLanguageService.findDocumentColors(textDocument, stylesheet);
+		});
+	}
 });
 
 describe("Color Presentations", async () => {

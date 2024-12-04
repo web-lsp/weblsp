@@ -339,19 +339,25 @@ mod wasm_bindings {
     };
     use biome_rowan::AstNode;
     use lsp_types::Position;
+    use serde_json::from_str;
     use serde_wasm_bindgen;
+    use std::sync::LazyLock;
     use wasm_bindgen::prelude::*;
-
     extern crate console_error_panic_hook;
 
+    // TMP: Embed the JSON data at compile time
+    // We'll eventually use the language service when it'll be available in WASM
+    static CSS_SCHEMA_JSON: &str = include_str!("../../data/css-schema.json");
+    static CSS_DATA: LazyLock<CssCustomData> =
+        LazyLock::new(|| from_str(CSS_SCHEMA_JSON).expect("Failed to parse css-schema.json"));
+
     #[wasm_bindgen(typescript_custom_section)]
-    const TS_APPEND_CONTENT: &'static str = r#"export async function get_hover(document: import("vscode-languageserver-textdocument").TextDocument, position: import("vscode-languageserver-types").Position, cssData: any): Promise<import("vscode-languageserver-types").Hover | null>;"#;
+    const TS_APPEND_CONTENT: &'static str = r#"export async function get_hover(document: import("vscode-languageserver-textdocument").TextDocument, position: import("vscode-languageserver-types").Position): Promise<import("vscode-languageserver-types").Hover | null>;"#;
 
     #[wasm_bindgen(skip_typescript)]
-    pub fn get_hover(document: JsValue, position: JsValue, css_data: JsValue) -> JsValue {
+    pub fn get_hover(document: JsValue, position: JsValue) -> JsValue {
         let parsed_text_document = create_text_document(document);
         let position: Position = serde_wasm_bindgen::from_value(position).unwrap();
-        let css_data: CssCustomData = serde_wasm_bindgen::from_value(css_data).unwrap();
         let css_parse = parse_css(&parsed_text_document.text);
         let line_index = LineIndex::new(&parsed_text_document.text);
         let encoding = PositionEncoding::Wide(WideEncoding::Utf16);
@@ -361,7 +367,7 @@ mod wasm_bindings {
             position,
             &line_index,
             encoding,
-            &css_data,
+            &CSS_DATA,
         );
 
         serde_wasm_bindgen::to_value(&hover).unwrap()

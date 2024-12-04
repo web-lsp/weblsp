@@ -1,9 +1,7 @@
-import { Bench } from "tinybench";
 import { get_folding_ranges } from "csslsrs";
 import { getCSSLanguageService } from "vscode-css-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
-
-const bench = new Bench({ name: "Folding Ranges", time: 100 });
+import { bench, describe } from "vitest";
 
 const vscodeLanguageService = getCSSLanguageService();
 const content = `
@@ -43,22 +41,12 @@ h4 {
 
 const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
 
-export function registerFoldingRangesBenchmarks(
-	bench: Bench,
-	onlyCSSLSRS: boolean
-): Bench {
-	bench.add("CSSLSRS(WASM) - Folding Ranges", async () => {
+describe("Folding Ranges", async () => {
+	bench("CSSLSRS(WASM) - Folding Ranges", async () => {
 		await get_folding_ranges(textDocument);
 	});
-
-	if (onlyCSSLSRS) return bench;
-
-	bench.add("vscode-css-languageservice - Folding Ranges", () => {
+	bench("vscode-css-languageservice - Folding Ranges", () => {
 		const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
 		vscodeLanguageService.getFoldingRanges(textDocument, stylesheet);
 	});
-
-	return bench;
-}
-
-export default registerFoldingRangesBenchmarks(bench, false);
+});

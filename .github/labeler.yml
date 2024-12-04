@@ -1,24 +1,31 @@
 # See https://github.com/actions/labeler
-"documentation":
-  - docs/**
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: docs/**
 
 "crt:csslsrs":
-  - crates/csslsrs/**
+  - changed-files:
+      - any-glob-to-any-file: crates/csslsrs/**
 
 "crt:weblsp":
-  - crates/weblsp/**
+  - changed-files:
+      - any-glob-to-any-file: crates/weblsp/**
 
 "pkg:csslsrs":
-  - packages/csslsrs/**
+  - changed-files:
+      - any-glob-to-any-file: packages/csslsrs/**
 
 "pkg:vscode":
-  - packages/vscode/**
+  - changed-files:
+      - any-glob-to-any-file: packages/vscode/**
 
-"devops":
-  - .github/**
-  - .vscode/**
-  - .zed/**
-  - .editorconfig
-  - .gitignore
-  - justfile
-  - pnpm-workspace.yaml
+devops:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - .vscode/**
+          - .zed/**
+          - .editorconfig
+          - .gitignore
+          - justfile
+          - pnpm-workspace.yaml

@@ -7,159 +7,6 @@ use std::str::FromStr;
 /// The alpha value for opaque colors
 pub const OPAQUE: f32 = 1.0;
 
-// `palette`'s named colors map isn't public, so we need to define it ourselves
-// See: https://github.com/Ogeon/palette/issues/421
-pub static NAMED_COLORS: phf::Map<&'static str, Srgb<u8>> = phf::phf_map! {
-    "aliceblue" => Srgb::new(240, 248, 255),
-    "antiquewhite" => Srgb::new(250, 235, 215),
-    "aqua" => Srgb::new(0, 255, 255),
-    "aquamarine" => Srgb::new(127, 255, 212),
-    "azure" => Srgb::new(240, 255, 255),
-    "beige" => Srgb::new(245, 245, 220),
-    "bisque" => Srgb::new(255, 228, 196),
-    "black" => Srgb::new(0, 0, 0),
-    "blanchedalmond" => Srgb::new(255, 235, 205),
-    "blue" => Srgb::new(0, 0, 255),
-    "blueviolet" => Srgb::new(138, 43, 226),
-    "brown" => Srgb::new(165, 42, 42),
-    "burlywood" => Srgb::new(222, 184, 135),
-    "cadetblue" => Srgb::new(95, 158, 160),
-    "chartreuse" => Srgb::new(127, 255, 0),
-    "chocolate" => Srgb::new(210, 105, 30),
-    "coral" => Srgb::new(255, 127, 80),
-    "cornflowerblue" => Srgb::new(100, 149, 237),
-    "cornsilk" => Srgb::new(255, 248, 220),
-    "crimson" => Srgb::new(220, 20, 60),
-    "cyan" => Srgb::new(0, 255, 255),
-    "darkblue" => Srgb::new(0, 0, 139),
-    "darkcyan" => Srgb::new(0, 139, 139),
-    "darkgoldenrod" => Srgb::new(184, 134, 11),
-    "darkgray" => Srgb::new(169, 169, 169),
-    "darkgreen" => Srgb::new(0, 100, 0),
-    "darkgrey" => Srgb::new(169, 169, 169),
-    "darkkhaki" => Srgb::new(189, 183, 107),
-    "darkmagenta" => Srgb::new(139, 0, 139),
-    "darkolivegreen" => Srgb::new(85, 107, 47),
-    "darkorange" => Srgb::new(255, 140, 0),
-    "darkorchid" => Srgb::new(153, 50, 204),
-    "darkred" => Srgb::new(139, 0, 0),
-    "darksalmon" => Srgb::new(233, 150, 122),
-    "darkseagreen" => Srgb::new(143, 188, 143),
-    "darkslateblue" => Srgb::new(72, 61, 139),
-    "darkslategray" => Srgb::new(47, 79, 79),
-    "darkslategrey" => Srgb::new(47, 79, 79),
-    "darkturquoise" => Srgb::new(0, 206, 209),
-    "darkviolet" => Srgb::new(148, 0, 211),
-    "deeppink" => Srgb::new(255, 20, 147),
-    "deepskyblue" => Srgb::new(0, 191, 255),
-    "dimgray" => Srgb::new(105, 105, 105),
-    "dimgrey" => Srgb::new(105, 105, 105),
-    "dodgerblue" => Srgb::new(30, 144, 255),
-    "firebrick" => Srgb::new(178, 34, 34),
-    "floralwhite" => Srgb::new(255, 250, 240),
-    "forestgreen" => Srgb::new(34, 139, 34),
-    "fuchsia" => Srgb::new(255, 0, 255),
-    "gainsboro" => Srgb::new(220, 220, 220),
-    "ghostwhite" => Srgb::new(248, 248, 255),
-    "gold" => Srgb::new(255, 215, 0),
-    "goldenrod" => Srgb::new(218, 165, 32),
-    "gray" => Srgb::new(128, 128, 128),
-    "green" => Srgb::new(0, 128, 0),
-    "greenyellow" => Srgb::new(173, 255, 47),
-    "grey" => Srgb::new(128, 128, 128),
-    "honeydew" => Srgb::new(240, 255, 240),
-    "hotpink" => Srgb::new(255, 105, 180),
-    "indianred" => Srgb::new(205, 92, 92),
-    "indigo" => Srgb::new(75, 0, 130),
-    "ivory" => Srgb::new(255, 255, 240),
-    "khaki" => Srgb::new(240, 230, 140),
-    "lavender" => Srgb::new(230, 230, 250),
-    "lavenderblush" => Srgb::new(255, 240, 245),
-    "lawngreen" => Srgb::new(124, 252, 0),
-    "lemonchiffon" => Srgb::new(255, 250, 205),
-    "lightblue" => Srgb::new(173, 216, 230),
-    "lightcoral" => Srgb::new(240, 128, 128),
-    "lightcyan" => Srgb::new(224, 255, 255),
-    "lightgoldenrodyellow" => Srgb::new(250, 250, 210),
-    "lightgray" => Srgb::new(211, 211, 211),
-    "lightgreen" => Srgb::new(144, 238, 144),
-    "lightgrey" => Srgb::new(211, 211, 211),
-    "lightpink" => Srgb::new(255, 182, 193),
-    "lightsalmon" => Srgb::new(255, 160, 122),
-    "lightseagreen" => Srgb::new(32, 178, 170),
-    "lightskyblue" => Srgb::new(135, 206, 250),
-    "lightslategray" => Srgb::new(119, 136, 153),
-    "lightslategrey" => Srgb::new(119, 136, 153),
-    "lightsteelblue" => Srgb::new(176, 196, 222),
-    "lightyellow" => Srgb::new(255, 255, 224),
-    "lime" => Srgb::new(0, 255, 0),
-    "limegreen" => Srgb::new(50, 205, 50),
-    "linen" => Srgb::new(250, 240, 230),
-    "magenta" => Srgb::new(255, 0, 255),
-    "maroon" => Srgb::new(128, 0, 0),
-    "mediumaquamarine" => Srgb::new(102, 205, 170),
-    "mediumblue" => Srgb::new(0, 0, 205),
-    "mediumorchid" => Srgb::new(186, 85, 211),
-    "mediumpurple" => Srgb::new(147, 112, 219),
-    "mediumseagreen" => Srgb::new(60, 179, 113),
-    "mediumslateblue" => Srgb::new(123, 104, 238),
-    "mediumspringgreen" => Srgb::new(0, 250, 154),
-    "mediumturquoise" => Srgb::new(72, 209, 204),
-    "mediumvioletred" => Srgb::new(199, 21, 133),
-    "midnightblue" => Srgb::new(25, 25, 112),
-    "mintcream" => Srgb::new(245, 255, 250),
-    "mistyrose" => Srgb::new(255, 228, 225),
-    "moccasin" => Srgb::new(255, 228, 181),
-    "navajowhite" => Srgb::new(255, 222, 173),
-    "navy" => Srgb::new(0, 0, 128),
-    "oldlace" => Srgb::new(253, 245, 230),
-    "olive" => Srgb::new(128, 128, 0),
-    "olivedrab" => Srgb::new(107, 142, 35),
-    "orange" => Srgb::new(255, 165, 0),
-    "orangered" => Srgb::new(255, 69, 0),
-    "orchid" => Srgb::new(218, 112, 214),
-    "palegoldenrod" => Srgb::new(238, 232, 170),
-    "palegreen" => Srgb::new(152, 251, 152),
-    "paleturquoise" => Srgb::new(175, 238, 238),
-    "palevioletred" => Srgb::new(219, 112, 147),
-    "papayawhip" => Srgb::new(255, 239, 213),
-    "peachpuff" => Srgb::new(255, 218, 185),
-    "peru" => Srgb::new(205, 133, 63),
-    "pink" => Srgb::new(255, 192, 203),
-    "plum" => Srgb::new(221, 160, 221),
-    "powderblue" => Srgb::new(176, 224, 230),
-    "purple" => Srgb::new(128, 0, 128),
-    "rebeccapurple" => Srgb::new(102, 51, 153),
-    "red" => Srgb::new(255, 0, 0),
-    "rosybrown" => Srgb::new(188, 143, 143),
-    "royalblue" => Srgb::new(65, 105, 225),
-    "saddlebrown" => Srgb::new(139, 69, 19),
-    "salmon" => Srgb::new(250, 128, 114),
-    "sandybrown" => Srgb::new(244, 164, 96),
-    "seagreen" => Srgb::new(46, 139, 87),
-    "seashell" => Srgb::new(255, 245, 238),
-    "sienna" => Srgb::new(160, 82, 45),
-    "silver" => Srgb::new(192, 192, 192),
-    "skyblue" => Srgb::new(135, 206, 235),
-    "slateblue" => Srgb::new(106, 90, 205),
-    "slategray" => Srgb::new(112, 128, 144),
-    "slategrey" => Srgb::new(112, 128, 144),
-    "snow" => Srgb::new(255, 250, 250),
-    "springgreen" => Srgb::new(0, 255, 127),
-    "steelblue" => Srgb::new(70, 130, 180),
-    "tan" => Srgb::new(210, 180, 140),
-    "teal" => Srgb::new(0, 128, 128),
-    "thistle" => Srgb::new(216, 191, 216),
-    "tomato" => Srgb::new(255, 99, 71),
-    "turquoise" => Srgb::new(64, 224, 208),
-    "violet" => Srgb::new(238, 130, 238),
-    "wheat" => Srgb::new(245, 222, 179),
-    "white" => Srgb::new(255, 255, 255),
-    "whitesmoke" => Srgb::new(245, 245, 245),
-    "yellow" => Srgb::new(255, 255, 0),
-    "yellowgreen" => Srgb::new(154, 205, 50),
-};
-
 /// A trait that allows converting between CSS colors and LSP colors and serializing the color back to CSS
 pub trait CSSColor {
     fn to_lsp_color(&self) -> lsp_types::Color;
@@ -212,7 +59,7 @@ impl CSSColor for Srgba {
 
 impl CSSColor for Hsla {
     fn to_lsp_color(&self) -> lsp_types::Color {
-        let color: Srgba = self.into_format().into_color();
+        let color: Srgba = (*self).into_color();
         color.to_lsp_color()
     }
 
@@ -274,8 +121,7 @@ impl CSSColor for Hwba {
 
 impl CSSColor for Laba {
     fn to_lsp_color(&self) -> lsp_types::Color {
-        let laba_color = Laba::new(self.l, self.a, self.b, self.alpha);
-        let color: Srgba = laba_color.into_color();
+        let color: Srgba = (*self).into_color();
         color.to_lsp_color()
     }
 
@@ -301,8 +147,7 @@ impl CSSColor for Laba {
 
 impl CSSColor for Lcha {
     fn to_lsp_color(&self) -> lsp_types::Color {
-        let lcha_color = Lcha::new(self.l, self.chroma, self.hue, self.alpha);
-        let color: Srgba = lcha_color.into_color();
+        let color: Srgba = (*self).into_color();
         color.to_lsp_color()
     }
 
@@ -344,11 +189,11 @@ pub fn parse_css_color(text: &str) -> Option<Box<dyn CSSColor>> {
     if let Some(text) = text.strip_prefix('#') {
         match text.len() {
             3 | 6 => {
-                let color: Srgb = Srgb::from_str(text).unwrap().into();
+                let color: Srgb = Srgb::from_str(text).unwrap();
                 return Some(Box::new(Srgba::from(color)));
             }
             4 | 8 => {
-                let color: Srgba = Srgba::from_str(text).unwrap().into_format();
+                let color: Srgba = Srgba::from_str(text).unwrap();
                 return Some(Box::new(color));
             }
             _ => return None,

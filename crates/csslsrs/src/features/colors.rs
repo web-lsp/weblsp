@@ -2,7 +2,7 @@ use biome_css_parser::CssParse;
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use lsp_types::{ColorInformation, ColorPresentation, Range, TextDocumentItem, TextEdit};
-use palette::{Hsla, Hwba, Laba, Lcha, Srgba, WithAlpha};
+use palette::{named, Hsla, Hwba, Laba, Lcha, Srgba, WithAlpha};
 
 use crate::{
     converters::{line_index::LineIndex, to_proto::range, PositionEncoding},
@@ -10,7 +10,7 @@ use crate::{
     service::LanguageService,
 };
 
-use super::color_parser::{parse_css_color, CSSColor, NAMED_COLORS};
+use super::color_parser::{parse_css_color, CSSColor};
 
 fn extract_colors_information(
     node: &SyntaxNode<CssLanguage>,
@@ -31,16 +31,7 @@ fn extract_colors_information(
                 if let Some(function_name) = child.first_child().map(|n| n.text().to_string()) {
                     if matches!(
                         function_name.as_str(),
-                        "rgb"
-                            | "rgba"
-                            | "hsl"
-                            | "hsla"
-                            | "hwb"
-                            | "hwba"
-                            | "lab"
-                            | "lch"
-                            | "hsv"
-                            | "hsva"
+                        "rgb" | "rgba" | "hsl" | "hsla" | "hwb" | "hwba" | "lab" | "lch"
                     ) {
                         if let Some(color) = parse_css_color(&node.text().to_string()) {
                             colors.push(ColorInformation {
@@ -53,9 +44,11 @@ fn extract_colors_information(
             }
             // Any CSS identifier, such as a property name or basic value (ex: `color: red;` contains two identifiers)
             CssSyntaxKind::CSS_IDENTIFIER => {
-                if let Some(color) = NAMED_COLORS
-                    .get(&node.text().to_string())
-                    .map(|color| Srgba::new(color.red, color.green, color.blue, 255).into_format())
+                if let Some(color) = named::entries()
+                    .find(|named_color| named_color.0 == node.text())
+                    .map(|color| {
+                        Srgba::new(color.1.red, color.1.green, color.1.blue, 255).into_format()
+                    })
                 {
                     colors.push(ColorInformation {
                         color: color.to_lsp_color(),
@@ -101,10 +94,9 @@ fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<Col
     let mut color_texts: Vec<String> = vec![];
 
     // Check for a named color with the same values
-    let named_color = NAMED_COLORS
-        .values()
-        .position(|&color| color == rgb_color.into_format::<u8, u8>().without_alpha());
-    let named_color_string = named_color.map(|i| NAMED_COLORS.keys().nth(i).unwrap());
+    let named_color = named::colors()
+        .position(|color| color == rgb_color.into_format::<u8, u8>().without_alpha());
+    let named_color_string = named_color.map(|i| named::names().nth(i).unwrap());
 
     if let Some(named_color_string) = named_color_string {
         color_texts.push(named_color_string.to_string());

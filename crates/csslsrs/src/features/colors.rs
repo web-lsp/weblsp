@@ -44,12 +44,8 @@ fn extract_colors_information(
             }
             // Any CSS identifier, such as a property name or basic value (ex: `color: red;` contains two identifiers)
             CssSyntaxKind::CSS_IDENTIFIER => {
-                if let Some(color) = named::entries()
-                    .find(|named_color| named_color.0 == node.text())
-                    .map(|color| {
-                        Srgba::new(color.1.red, color.1.green, color.1.blue, 255).into_format()
-                    })
-                {
+                if let Some(color) = named::from_str(&node.text().to_string().to_lowercase()) {
+                    let color: Srgba = color.into_format().into();
                     colors.push(ColorInformation {
                         color: color.to_lsp_color(),
                         range: range(line_index, node.text_range(), encoding).unwrap(),

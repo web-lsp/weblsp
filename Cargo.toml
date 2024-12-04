@@ -6,5 +6,3 @@ resolver = "2"
 opt-level = 3
 lto = "fat"
 codegen-units = 1
-strip = "symbols" # Set to `false` for debug information
-debug = false     # Set to `true` for debug information

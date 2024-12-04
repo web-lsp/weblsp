@@ -32,7 +32,7 @@ jobs:
           bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
 
       - name: Build (WASM)
-        run: just build-wasm release
+        run: just build-wasm bench
 
       - name: Build the benchmark target(s)
         run: cargo codspeed build

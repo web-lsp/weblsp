@@ -1,107 +1,135 @@
 use serde::Deserialize;
+use std::borrow::Cow;
 
 #[derive(Deserialize)]
+#[serde(bound(deserialize = "'de: 'a"))]
 #[serde(rename_all = "camelCase")]
 /// Represents any CSS data provided by the user or MDN.
 /// This is used to provide completions and hover information.
-pub struct CssCustomData {
-    pub css: CssSection,
+pub struct CssCustomData<'a> {
+    pub css: CssSection<'a>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CssSection {
-    pub at_directives: AtDirectives,
-    pub pseudo_classes: PseudoClasses,
-    pub pseudo_elements: PseudoElements,
-    pub properties: Properties,
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct CssSection<'a> {
+    pub at_directives: AtDirectives<'a>,
+    pub pseudo_classes: PseudoClasses<'a>,
+    pub pseudo_elements: PseudoElements<'a>,
+    pub properties: Properties<'a>,
 }
 
 #[derive(Deserialize)]
-pub struct AtDirectives {
-    pub entry: Vec<AtDirectiveEntry>,
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct AtDirectives<'a> {
+    pub entry: Vec<AtDirectiveEntry<'a>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoClasses {
-    pub entry: Vec<PseudoClassEntry>,
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct PseudoClasses<'a> {
+    pub entry: Vec<PseudoClassEntry<'a>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoElements {
-    pub entry: Vec<PseudoElementEntry>,
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct PseudoElements<'a> {
+    pub entry: Vec<PseudoElementEntry<'a>>,
 }
 
 #[derive(Deserialize)]
-pub struct Properties {
-    pub entry: Vec<PropertyEntry>,
+#[serde(bound(deserialize = "'de: 'a"))]
+pub struct Properties<'a> {
+    pub entry: Vec<PropertyEntry<'a>>,
 }
 
 #[derive(Deserialize)]
-pub struct AtDirectiveEntry {
+pub struct AtDirectiveEntry<'a> {
     #[serde(rename = "$")]
-    pub attributes: AtDirectiveAttributes,
-    pub desc: Option<String>,
+    pub attributes: AtDirectiveAttributes<'a>,
+    #[serde(borrow)]
+    pub desc: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoClassEntry {
+pub struct PseudoClassEntry<'a> {
     #[serde(rename = "$")]
-    pub attributes: PseudoClassAttributes,
-    pub desc: Option<String>,
+    pub attributes: PseudoClassAttributes<'a>,
+    #[serde(borrow)]
+    pub desc: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoElementEntry {
+pub struct PseudoElementEntry<'a> {
     #[serde(rename = "$")]
-    pub attributes: PseudoElementAttributes,
-    pub desc: Option<String>,
+    pub attributes: PseudoElementAttributes<'a>,
+    #[serde(borrow)]
+    pub desc: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PropertyEntry {
+pub struct PropertyEntry<'a> {
     #[serde(rename = "$")]
-    pub attributes: PropertyAttributes,
-    pub desc: Option<String>,
+    pub attributes: PropertyAttributes<'a>,
+    #[serde(borrow)]
+    pub desc: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct AtDirectiveAttributes {
-    pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+pub struct AtDirectiveAttributes<'a> {
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub version: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub browsers: Option<Cow<'a, str>>,
+    #[serde(rename = "ref", borrow)]
+    pub ref_: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub syntax: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoClassAttributes {
-    pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+pub struct PseudoClassAttributes<'a> {
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub version: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub browsers: Option<Cow<'a, str>>,
+    #[serde(rename = "ref", borrow)]
+    pub ref_: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub syntax: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PseudoElementAttributes {
-    pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+pub struct PseudoElementAttributes<'a> {
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub version: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub browsers: Option<Cow<'a, str>>,
+    #[serde(rename = "ref", borrow)]
+    pub ref_: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub syntax: Option<Cow<'a, str>>,
 }
 
 #[derive(Deserialize)]
-pub struct PropertyAttributes {
-    pub name: String,
-    pub restriction: Option<String>,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+pub struct PropertyAttributes<'a> {
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub restriction: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub version: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub browsers: Option<Cow<'a, str>>,
+    #[serde(rename = "ref", borrow)]
+    pub ref_: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub syntax: Option<Cow<'a, str>>,
 }

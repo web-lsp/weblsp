@@ -14,7 +14,7 @@ fn extract_hover_information(
     position: Position,
     line_index: &LineIndex,
     encoding: PositionEncoding,
-    css_data: &CssCustomData,
+    css_data: &Vec<&CssCustomData>,
 ) -> Option<Hover> {
     let offset = offset(line_index, position, encoding).ok()?;
     let token = node.token_at_offset(offset).right_biased()?;
@@ -76,44 +76,54 @@ fn extract_hover_information(
 fn get_css_hover_content(
     kind: CssSyntaxKind,
     name: &str,
-    css_data: &CssCustomData,
+    css_data: &Vec<&CssCustomData>,
 ) -> Option<String> {
     match kind {
-        CssSyntaxKind::CSS_IDENTIFIER => css_data
-            .css
-            .properties
-            .entry
-            .iter()
-            .find(|prop| prop.attributes.name == name)
-            .map(|property| {
-                format_css_entry(
-                    &property.attributes.name,
-                    property.desc.as_deref(),
-                    property.attributes.syntax.as_deref(),
-                    None,
-                    property.attributes.browsers.as_deref(),
-                    property.attributes.ref_.as_deref(),
-                    property.attributes.restriction.as_deref(),
-                )
-            }),
+        CssSyntaxKind::CSS_IDENTIFIER => {
+            for data in css_data {
+                if let Some(property) = data
+                    .css
+                    .properties
+                    .entry
+                    .iter()
+                    .find(|prop| prop.attributes.name == name)
+                {
+                    return Some(format_css_entry(
+                        &property.attributes.name,
+                        property.desc.as_deref(),
+                        property.attributes.syntax.as_deref(),
+                        None,
+                        property.attributes.browsers.as_deref(),
+                        property.attributes.ref_.as_deref(),
+                        property.attributes.restriction.as_deref(),
+                    ));
+                }
+            }
+            None
+        }
         // Handle at-rules like @media, @supports, etc.
-        CssSyntaxKind::CSS_AT_RULE => css_data
-            .css
-            .at_directives
-            .entry
-            .iter()
-            .find(|ad| ad.attributes.name == name)
-            .map(|at_directive| {
-                format_css_entry(
-                    &at_directive.attributes.name,
-                    at_directive.desc.as_deref(),
-                    at_directive.attributes.syntax.as_deref(),
-                    None,
-                    at_directive.attributes.browsers.as_deref(),
-                    at_directive.attributes.ref_.as_deref(),
-                    None,
-                )
-            }),
+        CssSyntaxKind::CSS_AT_RULE => {
+            for data in css_data {
+                if let Some(at_directive) = data
+                    .css
+                    .at_directives
+                    .entry
+                    .iter()
+                    .find(|ad| ad.attributes.name == name)
+                {
+                    return Some(format_css_entry(
+                        &at_directive.attributes.name,
+                        at_directive.desc.as_deref(),
+                        at_directive.attributes.syntax.as_deref(),
+                        None,
+                        at_directive.attributes.browsers.as_deref(),
+                        at_directive.attributes.ref_.as_deref(),
+                        None,
+                    ));
+                }
+            }
+            None
+        }
         CssSyntaxKind::CSS_SELECTOR_LIST
         | CssSyntaxKind::CSS_COMPLEX_SELECTOR
         | CssSyntaxKind::CSS_COMPOUND_SELECTOR => Some(format_css_entry(
@@ -308,14 +318,9 @@ fn is_identifier_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_' || c == '-' || c == '\\'
 }
 
-impl LanguageService {
+impl LanguageService<'_> {
     /// Gets the hover information for the given CSS document and position.
-    pub fn get_hover(
-        &mut self,
-        document: TextDocumentItem,
-        position: Position,
-        css_data: &CssCustomData,
-    ) -> Option<Hover> {
+    pub fn get_hover(&mut self, document: TextDocumentItem, position: Position) -> Option<Hover> {
         let store_entry = self.store.get_or_update_document(document);
 
         extract_hover_information(
@@ -323,7 +328,7 @@ impl LanguageService {
             position,
             &store_entry.line_index,
             self.encoding,
-            css_data,
+            &self.css_data,
         )
     }
 }
@@ -333,23 +338,15 @@ mod wasm_bindings {
     use super::extract_hover_information;
     use crate::{
         converters::{line_index::LineIndex, PositionEncoding, WideEncoding},
-        css_data::CssCustomData,
+        css_data_generated::CSS_DATA,
         parser::parse_css,
         wasm_text_document::create_text_document,
     };
     use biome_rowan::AstNode;
     use lsp_types::Position;
-    use serde_json::from_str;
     use serde_wasm_bindgen;
-    use std::sync::LazyLock;
     use wasm_bindgen::prelude::*;
     extern crate console_error_panic_hook;
-
-    // TMP: Embed the JSON data at compile time
-    // We'll eventually use the language service when it'll be available in WASM
-    static CSS_SCHEMA_JSON: &str = include_str!("../../data/css-schema.json");
-    static CSS_DATA: LazyLock<CssCustomData> =
-        LazyLock::new(|| from_str(CSS_SCHEMA_JSON).expect("Failed to parse css-schema.json"));
 
     #[wasm_bindgen(typescript_custom_section)]
     const TS_APPEND_CONTENT: &'static str = r#"export async function get_hover(document: import("vscode-languageserver-textdocument").TextDocument, position: import("vscode-languageserver-types").Position): Promise<import("vscode-languageserver-types").Hover | null>;"#;
@@ -367,7 +364,7 @@ mod wasm_bindings {
             position,
             &line_index,
             encoding,
-            &CSS_DATA,
+            &vec![&CSS_DATA],
         );
 
         serde_wasm_bindgen::to_value(&hover).unwrap()

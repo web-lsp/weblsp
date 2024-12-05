@@ -2,6 +2,7 @@ pub mod analyzer;
 pub mod parser;
 
 pub mod css_data;
+pub mod css_data_generated;
 pub mod service;
 pub mod store;
 

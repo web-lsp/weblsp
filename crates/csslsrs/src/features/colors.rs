@@ -128,7 +128,7 @@ fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<Col
         .collect()
 }
 
-impl LanguageService {
+impl LanguageService<'_> {
     pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
         let store_entry = self.store.get_or_update_document(document);
 

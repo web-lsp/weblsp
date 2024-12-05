@@ -14,13 +14,7 @@ fn get_hover_benchmark(c: &mut Criterion) {
     };
 
     c.bench_function("get_hover", |b| {
-        b.iter(|| {
-            ls.get_hover(
-                black_box(document.clone()),
-                lsp_types::Position::new(0, 8),
-                ls.css_data,
-            )
-        })
+        b.iter(|| ls.get_hover(black_box(document.clone()), lsp_types::Position::new(0, 8)))
     });
 }
 

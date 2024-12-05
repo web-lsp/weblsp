@@ -6,7 +6,7 @@ use std::error::Error;
 
 /// Initialize our CSS Language Service (CSSlsrs).
 /// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
-pub fn init_language_service() -> LanguageService {
+pub fn init_language_service() -> LanguageService<'static> {
     LanguageService::new(PositionEncoding::Utf8)
 }
 
@@ -54,7 +54,6 @@ pub fn handle_request(
                     language_service,
                 )?,
                 params.text_document_position_params.position,
-                language_service.css_data,
             );
             send_result(connection, id, serde_json::to_value(&hover).unwrap())?;
         }

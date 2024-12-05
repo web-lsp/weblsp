@@ -1,24 +1,17 @@
-use crate::{converters::PositionEncoding, css_data::CssCustomData, store::DocumentStore};
-use serde_json;
-use std::sync::LazyLock;
+use crate::{
+    converters::PositionEncoding, css_data::CssCustomData, css_data_generated::CSS_DATA,
+    store::DocumentStore,
+};
 
 /// The Language Service is the main entry point for interacting with CSSlsrs.
 /// It contains a DocumentStore, a PositionEncoding and a reference to the CSS data.
-pub struct LanguageService {
+pub struct LanguageService<'a> {
     pub store: DocumentStore,
     pub encoding: PositionEncoding,
-    pub css_data: &'static CssCustomData,
+    pub css_data: Vec<&'a CssCustomData<'a>>,
 }
 
-static CSS_DATA: LazyLock<CssCustomData> =
-    LazyLock::new(
-        || match serde_json::from_str(include_str!("../data/css-schema.json")) {
-            Ok(data) => data,
-            Err(e) => panic!("Failed to parse CSS data: {}", e),
-        },
-    );
-
-impl LanguageService {
+impl LanguageService<'_> {
     /// Create a new LanguageService with a default DocumentStore and a custom PositionEncoding.
     ///
     /// ## Example
@@ -32,7 +25,7 @@ impl LanguageService {
         LanguageService {
             store: DocumentStore::new(),
             encoding,
-            css_data: &CSS_DATA,
+            css_data: vec![&CSS_DATA],
         }
     }
 
@@ -53,12 +46,12 @@ impl LanguageService {
         LanguageService {
             store,
             encoding,
-            css_data: &CSS_DATA,
+            css_data: vec![&CSS_DATA],
         }
     }
 }
 
-impl Default for LanguageService {
+impl Default for LanguageService<'_> {
     fn default() -> Self {
         LanguageService::new(PositionEncoding::Wide(
             crate::converters::WideEncoding::Utf16,

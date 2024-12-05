@@ -21,6 +21,11 @@ fetch-data:
 	mkdir -p ./crates/codegen/res
 	curl -L -o ./crates/codegen/res/css-schema.json https://raw.githubusercontent.com/microsoft/vscode-custom-data/main/web-data/css/css-schema.json
 
+codegen:
+	just fetch-data
+	echo "Generating Rust code..."
+	cargo run -p codegen
+
 test:
 	echo "Running Rust tests..."
 	cargo test

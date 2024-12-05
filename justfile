@@ -36,5 +36,8 @@ benchmark:
 	echo "Running Native benchmarks..."
 	cargo bench
 	echo "Running WASM benchmarks..."
+	just benchmark-wasm
+
+benchmark-wasm:
 	just build-wasm release
 	pnpm -C ./packages/benchmark-wasm run benchmark

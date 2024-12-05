@@ -44,7 +44,7 @@ pub struct Properties<'a> {
     pub entry: Vec<PropertyEntry<'a>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AtDirectiveEntry<'a> {
     #[serde(rename = "$")]
     pub attributes: AtDirectiveAttributes<'a>,
@@ -52,7 +52,7 @@ pub struct AtDirectiveEntry<'a> {
     pub desc: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PseudoClassEntry<'a> {
     #[serde(rename = "$")]
     pub attributes: PseudoClassAttributes<'a>,
@@ -60,7 +60,7 @@ pub struct PseudoClassEntry<'a> {
     pub desc: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PseudoElementEntry<'a> {
     #[serde(rename = "$")]
     pub attributes: PseudoElementAttributes<'a>,
@@ -68,7 +68,7 @@ pub struct PseudoElementEntry<'a> {
     pub desc: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PropertyEntry<'a> {
     #[serde(rename = "$")]
     pub attributes: PropertyAttributes<'a>,
@@ -76,7 +76,7 @@ pub struct PropertyEntry<'a> {
     pub desc: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct AtDirectiveAttributes<'a> {
     #[serde(borrow)]
     pub name: Cow<'a, str>,
@@ -90,7 +90,7 @@ pub struct AtDirectiveAttributes<'a> {
     pub syntax: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PseudoClassAttributes<'a> {
     #[serde(borrow)]
     pub name: Cow<'a, str>,
@@ -104,7 +104,7 @@ pub struct PseudoClassAttributes<'a> {
     pub syntax: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PseudoElementAttributes<'a> {
     #[serde(borrow)]
     pub name: Cow<'a, str>,
@@ -118,7 +118,7 @@ pub struct PseudoElementAttributes<'a> {
     pub syntax: Option<Cow<'a, str>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct PropertyAttributes<'a> {
     #[serde(borrow)]
     pub name: Cow<'a, str>,

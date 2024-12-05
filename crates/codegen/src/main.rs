@@ -22,12 +22,17 @@ fn main() {
         use std::borrow::Cow::Borrowed;
         use std::sync::LazyLock;
 
+        #at_atributes
+        #pseudo_classes
+        #pseudo_elements
+        #properties
+
         pub(crate) static CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| CssCustomData {
             css: CssSection {
-                at_directives: #at_atributes,
-                pseudo_classes: #pseudo_classes,
-                pseudo_elements: #pseudo_elements,
-                properties: #properties,
+                at_directives: AtDirectives { entry: AT_DIRECTIVES.to_vec() },
+                pseudo_classes: PseudoClasses { entry: PSEUDO_CLASSES.to_vec() },
+                pseudo_elements: PseudoElements { entry: PSEUDO_ELEMENTS.to_vec() },
+                properties: Properties { entry: PROPERTIES.to_vec() },
             }
         });
 
@@ -89,10 +94,10 @@ fn build_at_attributes(at_directives: AtDirectives) -> TokenStream {
         }
     });
 
+    let length = at_directives.entry.len();
     quote! {
-        AtDirectives {
-            entry: vec![#(#constants)*]
-        }
+        #[derive(Clone)]
+        const AT_DIRECTIVES: [AtDirectiveEntry; #length] = [#(#constants)*];
     }
 }
 
@@ -140,10 +145,10 @@ fn build_pseudo_classes(pseudo_classes: PseudoClasses) -> TokenStream {
         }
     });
 
+    let length = pseudo_classes.entry.len();
     quote! {
-        PseudoClasses {
-            entry: vec![#(#constants)*]
-        }
+        #[derive(Clone)]
+        const PSEUDO_CLASSES: [PseudoClassEntry; #length] = [#(#constants)*];
     }
 }
 
@@ -191,10 +196,10 @@ fn build_pseudo_elements(pseudo_elements: PseudoElements) -> TokenStream {
         }
     });
 
+    let length = pseudo_elements.entry.len();
     quote! {
-        PseudoElements {
-            entry: vec![#(#constants)*]
-        }
+        #[derive(Clone)]
+        const PSEUDO_ELEMENTS: [PseudoElementEntry; #length] = [#(#constants)*];
     }
 }
 
@@ -248,9 +253,9 @@ fn build_properties(properties: Properties) -> TokenStream {
         }
     });
 
+    let length = properties.entry.len();
     quote! {
-        Properties {
-            entry: vec![#(#constants)*]
-        }
+        #[derive(Clone)]
+        const PROPERTIES: [PropertyEntry; #length] = [#(#constants)*];
     }
 }

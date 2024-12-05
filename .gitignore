@@ -3,6 +3,5 @@ packages/csslsrs/dist
 node_modules
 **/generated/*
 !**/generated/README.md
-crates/codegen/res/css-schema.json
 
 .DS_Store

@@ -103,6 +103,7 @@ impl LanguageService {
     }
 
     pub(crate) fn get_css_custom_data(&self) -> Vec<&CssCustomData> {
+        // Merge the base CSS data with the custom CSS data into a single vector for easier iteration
         std::iter::once(self.base_css_data)
             .chain(self.css_data.iter())
             .collect()

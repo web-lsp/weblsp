@@ -1,13 +1,12 @@
 use crate::cast;
 use csslsrs::service::LanguageService;
-use csslsrs::service::LanguageServiceOptions;
 use lsp_server::{Connection, Message, Request, Response};
 use std::error::Error;
 
 /// Initialize our CSS Language Service (CSSlsrs).
 /// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
 pub fn init_language_service() -> LanguageService {
-    LanguageService::new(LanguageServiceOptions::default())
+    LanguageService::default()
 }
 
 /// Handle WEBlsp's CSS requests. This function will be called by the main loop when a CSS request is received,
@@ -68,7 +67,7 @@ fn get_text_document(
     text_document_identifier: lsp_types::TextDocumentIdentifier,
     language_service: &LanguageService,
 ) -> Result<lsp_types::TextDocumentItem, Box<dyn Error + Sync + Send>> {
-    let text_document = match language_service.store.get(&text_document_identifier.uri) {
+    let text_document = match language_service.get_document(&text_document_identifier.uri) {
         Some(doc) => doc,
         None => return Err(Box::from("Document not found")),
     };

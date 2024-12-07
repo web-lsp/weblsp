@@ -45,7 +45,7 @@ fn assert_hover(text_with_cursor: &str, expected_hover: Hover) {
         text.clone(),
     );
 
-    ls.store.upsert_document(document.clone());
+    ls.upsert_document(document.clone());
 
     let position = offset_to_position(&text, offset);
     let hover = ls.get_hover(document, position);

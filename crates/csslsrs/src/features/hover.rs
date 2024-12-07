@@ -350,7 +350,6 @@ mod wasm_bindings {
     use lsp_types::Position;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
-    extern crate console_error_panic_hook;
 
     #[wasm_bindgen(typescript_custom_section)]
     const TS_APPEND_CONTENT: &'static str = r#"export async function get_hover(document: import("vscode-languageserver-textdocument").TextDocument, position: import("vscode-languageserver-types").Position): Promise<import("vscode-languageserver-types").Hover | null>;"#;

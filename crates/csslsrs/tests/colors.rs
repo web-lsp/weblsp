@@ -347,7 +347,7 @@ fn assert_color_symbols(
         text: text.to_string(),
     };
 
-    ls.store.upsert_document(document.clone());
+    ls.upsert_document(document.clone());
 
     let colors = ls.get_document_colors(document);
 

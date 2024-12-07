@@ -1,4 +1,20 @@
 use serde::Deserialize;
+use std::sync::LazyLock;
+
+pub(crate) static BASE_CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| {
+    serde_json::from_str(include_str!("../data/css-schema.json"))
+        .expect("Failed to parse css-schema.json")
+});
+
+// This is used when the user sets `include_base_css_custom_data` to false in the LanguageServiceOptions.
+pub(crate) static EMPTY_CSS_DATA: CssCustomData = CssCustomData {
+    css: CssSection {
+        at_directives: AtDirectives { entry: vec![] },
+        pseudo_classes: PseudoClasses { entry: vec![] },
+        pseudo_elements: PseudoElements { entry: vec![] },
+        properties: Properties { entry: vec![] },
+    },
+};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

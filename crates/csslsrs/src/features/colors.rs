@@ -129,14 +129,19 @@ fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<Col
 }
 
 impl LanguageService {
-    pub fn get_document_colors(&mut self, document: TextDocumentItem) -> Vec<ColorInformation> {
-        let store_entry = self.store.get_or_update_document(document);
+    pub fn get_document_colors(&self, document: TextDocumentItem) -> Vec<ColorInformation> {
+        let store_entry = self.store.get(&document.uri);
 
-        find_document_colors(
-            &store_entry.css_tree,
-            &store_entry.line_index,
-            self.encoding,
-        )
+        match store_entry {
+            Some(store_entry) => find_document_colors(
+                &store_entry.css_tree,
+                &store_entry.line_index,
+                self.options.encoding,
+            ),
+            None => {
+                vec![]
+            }
+        }
     }
 
     pub fn get_color_presentations(

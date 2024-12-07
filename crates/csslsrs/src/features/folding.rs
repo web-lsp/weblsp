@@ -166,9 +166,15 @@ fn compute_folding_ranges(
 impl LanguageService {
     /// Get the folding ranges for the given CSS source code. It supports CSS blocks enclosed in
     /// braces, multi-line comments, and regions marked with `#region` and `#endregion` comments.
-    pub fn get_folding_ranges(&mut self, document: TextDocumentItem) -> Vec<FoldingRange> {
-        let store_document = self.store.get_or_update_document(document);
-        compute_folding_ranges(&store_document.document, &store_document.line_index)
+    pub fn get_folding_ranges(&self, document: TextDocumentItem) -> Vec<FoldingRange> {
+        let store_document = self.store.get(&document.uri);
+
+        match store_document {
+            Some(store_document) => {
+                compute_folding_ranges(&store_document.document, &store_document.line_index)
+            }
+            None => Vec::new(),
+        }
     }
 }
 
@@ -184,7 +190,7 @@ mod wasm_bindings {
 /**
  * Get the folding ranges for the given CSS source code. It supports CSS blocks enclosed in
  * braces, multi-line comments, and regions marked with `#region` and `#endregion` comments.
- * 
+ *
  * @param source The CSS source code as a `TextDocument`.
  * @returns A list of `FoldingRange` objects indicating the foldable regions in the CSS code.
  */

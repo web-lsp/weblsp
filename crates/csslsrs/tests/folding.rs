@@ -436,6 +436,8 @@ fn assert_folding_ranges(text: &str, expected_ranges: Vec<FoldingRange>) {
         text.to_string(),
     );
 
+    ls.store.upsert_document(document.clone());
+
     let mut folding_ranges = ls.get_folding_ranges(document);
 
     // Sort both actual and expected ranges by start_line for consistent comparison

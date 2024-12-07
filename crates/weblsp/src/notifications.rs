@@ -26,7 +26,7 @@ pub fn handle_notification(
                     );
                     css_language_service
                         .store
-                        .get_or_update_document(params.text_document);
+                        .upsert_document(params.text_document);
                 }
                 _ => {
                     eprintln!(
@@ -42,7 +42,7 @@ pub fn handle_notification(
                 serde_json::from_value(notification.params).unwrap();
             css_language_service
                 .store
-                .get_or_update_document(TextDocumentItem {
+                .upsert_document(TextDocumentItem {
                     uri: params.text_document.uri,
                     language_id: "css".to_string(),
                     version: params.text_document.version,

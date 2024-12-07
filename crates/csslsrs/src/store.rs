@@ -41,39 +41,44 @@ impl DocumentStore {
         }
     }
 
-    /// Get a document from the store, updating it as well if necessary.
-    /// If the document is not yet in the store, it will be added.
-    pub fn get_or_update_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
+    pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {
+        self.documents.get(uri)
+    }
+
+    pub fn add_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
         let uri = document.uri.clone();
-        let store_entry = self.documents.entry(uri);
+        let line_index = LineIndex::new(&document.text);
 
-        match store_entry {
-            Entry::Vacant(entry) => {
-                let line_index = LineIndex::new(&document.text);
-                let css_tree = parse_css(&document.text);
+        let css_tree = parse_css(&document.text);
+        let store_entry = StoreEntry::new(document, line_index, css_tree);
 
-                entry.insert(StoreEntry::new(document, line_index, css_tree))
-            }
+        self.documents
+            .insert(store_entry.document.uri.clone(), store_entry);
+
+        self.get(&uri).unwrap()
+    }
+
+    pub fn upsert_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
+        let uri = document.uri.clone();
+        match self.documents.entry(document.uri.clone()) {
             Entry::Occupied(mut entry) => {
-                let mut_entry = entry.get_mut();
+                let line_index = LineIndex::new(&document.text);
 
-                if document.version != mut_entry.document.version {
-                    mut_entry.document = document;
-                    mut_entry.line_index = LineIndex::new(&mut_entry.document.text);
-                    mut_entry.css_tree = parse_css(&mut_entry.document.text);
-                }
+                let css_tree = parse_css(&document.text);
+                let store_entry = StoreEntry::new(document, line_index, css_tree);
 
-                entry.into_mut()
+                entry.insert(store_entry);
+            }
+            Entry::Vacant(_) => {
+                self.add_document(document);
             }
         }
+
+        self.get(&uri).unwrap()
     }
 
     pub fn remove(&mut self, uri: &Uri) {
         self.documents.remove(uri);
-    }
-
-    pub fn get(&self, uri: &Uri) -> Option<&StoreEntry> {
-        self.documents.get(uri)
     }
 }
 
@@ -110,7 +115,8 @@ mod tests {
             text: "body { color: red; }".to_string(),
         };
 
-        let store_entry = store.get_or_update_document(document.clone());
+        store.add_document(document.clone());
+        let store_entry = store.get(&document.uri).unwrap();
 
         assert_eq!(store_entry.document, document);
         assert_eq!(store.len(), 1);
@@ -123,7 +129,7 @@ mod tests {
             text: "body { color: blue; }".to_string(),
         };
 
-        let updated_store_entry = store.get_or_update_document(updated_document.clone());
+        let updated_store_entry = store.upsert_document(updated_document.clone());
 
         assert_eq!(updated_store_entry.document, updated_document);
 
@@ -142,7 +148,7 @@ mod tests {
             text: "body { color: red; }".to_string(),
         };
 
-        store.get_or_update_document(document.clone());
+        store.upsert_document(document.clone());
 
         assert!(store.documents.contains_key(&document.uri));
         assert!(!store.is_empty());

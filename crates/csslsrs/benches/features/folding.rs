@@ -48,6 +48,8 @@ fn get_folding_ranges_benchmark(c: &mut Criterion) {
         text: TEST_CASE.to_string(),
     };
 
+    ls.store.upsert_document(document.clone());
+
     c.bench_function("get_folding_ranges", |b| {
         b.iter(|| ls.get_folding_ranges(black_box(document.clone())))
     });

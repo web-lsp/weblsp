@@ -1,13 +1,13 @@
 use crate::cast;
-use csslsrs::converters::PositionEncoding;
 use csslsrs::service::LanguageService;
+use csslsrs::service::LanguageServiceOptions;
 use lsp_server::{Connection, Message, Request, Response};
 use std::error::Error;
 
 /// Initialize our CSS Language Service (CSSlsrs).
 /// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
 pub fn init_language_service() -> LanguageService {
-    LanguageService::new(PositionEncoding::Utf8)
+    LanguageService::new(LanguageServiceOptions::default())
 }
 
 /// Handle WEBlsp's CSS requests. This function will be called by the main loop when a CSS request is received,
@@ -54,7 +54,6 @@ pub fn handle_request(
                     language_service,
                 )?,
                 params.text_document_position_params.position,
-                language_service.css_data,
             );
             send_result(connection, id, serde_json::to_value(&hover).unwrap())?;
         }

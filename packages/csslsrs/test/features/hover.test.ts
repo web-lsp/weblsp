@@ -21,11 +21,11 @@ describe("Hover", () => {
     }`
 		);
 
-		ls.upsert_document(document);
+		ls.upsertDocument(document);
 	});
 
-	it("Can return hover", async () => {
-		const hover = await ls.get_hover(document.uri, { line: 0, character: 3 });
+	it("Can return hover", () => {
+		const hover = ls.getHover(document.uri, { line: 0, character: 3 });
 
 		expect(hover).to.deep.equal({
 			contents: {

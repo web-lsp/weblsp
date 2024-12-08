@@ -160,9 +160,15 @@ mod wasm_bindings {
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
+    #[wasm_bindgen(typescript_custom_section)]
+    const TS_APPEND_CONTENT: &'static str = r#"
+        declare function get_document_colors(documentUri: string): import("vscode-languageserver-types").ColorInformation[];
+        declare function get_color_presentations(color: import("vscode-languageserver-types").ColorInformation): import("vscode-languageserver-types").ColorPresentation[];
+    "#;
+
     #[wasm_bindgen]
     impl WASMLanguageService {
-        #[wasm_bindgen]
+        #[wasm_bindgen(skip_typescript, js_name = getDocumentColors)]
         pub fn get_document_colors(&self, document_uri: String) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
@@ -178,7 +184,7 @@ mod wasm_bindings {
             serde_wasm_bindgen::to_value(&document_colors).unwrap()
         }
 
-        #[wasm_bindgen]
+        #[wasm_bindgen(skip_typescript, js_name = getColorPresentations)]
         pub fn get_color_presentations(&self, color: JsValue) -> JsValue {
             let color = serde_wasm_bindgen::from_value(color).unwrap();
             let color_presentations = compute_color_presentations(color);

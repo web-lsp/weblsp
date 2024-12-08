@@ -44,11 +44,11 @@ const ls = new LanguageService({
 	include_base_css_custom_data: false,
 });
 
-ls.upsert_document(textDocument);
+ls.upsertDocument(textDocument);
 
 describe("Folding Ranges", async () => {
-	bench("CSSLSRS(WASM) - Folding Ranges", async () => {
-		await ls.get_folding_ranges(textDocument.uri);
+	bench("CSSLSRS(WASM) - Folding Ranges", () => {
+		ls.getFoldingRanges(textDocument.uri);
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Folding Ranges", () => {

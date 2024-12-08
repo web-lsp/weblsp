@@ -32,10 +32,10 @@ h1 > span {
 	const ls = new LanguageService({
 		include_base_css_custom_data: true,
 	});
-	await ls.upsert_document(textDocument);
+	ls.upsertDocument(textDocument);
 
-	bench("CSSLSRS(WASM) - Hover", async () => {
-		await ls.get_hover(textDocument.uri, {
+	bench("CSSLSRS(WASM) - Hover", () => {
+		ls.getHover(textDocument.uri, {
 			line: 14,
 			character: 3,
 		});

@@ -19,11 +19,11 @@ describe("Colors", () => {
 			"body {\n    color: red;\n    background-color: #fff;\n}\n"
 		);
 
-		ls.upsert_document(document);
+		ls.upsertDocument(document);
 	});
 
-	it("Can return document colors", async () => {
-		const colors = await ls.get_document_colors(document.uri);
+	it("Can return document colors", () => {
+		const colors = ls.getDocumentColors(document.uri);
 
 		expect(colors).to.deep.equal([
 			{
@@ -65,11 +65,11 @@ describe("Colors", () => {
 		]);
 	});
 
-	it("Can return color presentations", async () => {
-		const colors = await ls.get_document_colors(document.uri);
+	it("Can return color presentations", () => {
+		const colors = ls.getDocumentColors(document.uri);
 		const firstcolor = colors[0];
 
-		const colorPresentations = await ls.get_color_presentations(firstcolor);
+		const colorPresentations = ls.getColorPresentations(firstcolor);
 
 		expect(colorPresentations).not.to.be.empty;
 	});

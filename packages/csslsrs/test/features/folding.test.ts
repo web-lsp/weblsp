@@ -5,7 +5,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import type { FoldingRange } from "vscode-languageserver-types";
 
 describe("Folding", () => {
-	it("Can return folding ranges", async () => {
+	it("Can return folding ranges", () => {
 		const myDocument = TextDocument.create(
 			"file:///test.css",
 			"css",
@@ -16,9 +16,9 @@ describe("Folding", () => {
 		const ls = new LanguageService({
 			include_base_css_custom_data: true,
 		});
-		ls.upsert_document(myDocument);
+		ls.upsertDocument(myDocument);
 
-		const foldingRanges = await ls.get_folding_ranges(myDocument.uri);
+		const foldingRanges = ls.getFoldingRanges(myDocument.uri);
 
 		expect(foldingRanges).to.deep.equal([
 			{

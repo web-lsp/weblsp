@@ -27,13 +27,13 @@ const ls = new LanguageService({
 	include_base_css_custom_data: true,
 });
 
-await ls.upsert_document(textDocument);
+ls.upsertDocument(textDocument);
 
-const color = (await ls.get_document_colors(textDocument.uri))[0];
+const color = ls.getDocumentColors(textDocument.uri)[0];
 
 describe("Document colors", async () => {
-	bench("CSSLSRS(WASM) - Document colors", async () => {
-		await ls.get_document_colors(textDocument.uri);
+	bench("CSSLSRS(WASM) - Document colors", () => {
+		ls.getDocumentColors(textDocument.uri);
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Document colors", () => {
@@ -44,8 +44,8 @@ describe("Document colors", async () => {
 });
 
 describe("Color Presentations", async () => {
-	bench("CSSLSRS(WASM) - Color Presentations", async () => {
-		await ls.get_color_presentations(color);
+	bench("CSSLSRS(WASM) - Color Presentations", () => {
+		ls.getColorPresentations(color);
 	});
 
 	if (!process.env.CODSPEED) {

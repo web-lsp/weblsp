@@ -6,8 +6,6 @@ use crate::{
 };
 use lsp_types::{TextDocumentItem, Uri};
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::wasm_bindgen;
 
 /// The Language Service is the main entry point for interacting with CSSlsrs.
 /// It contains a DocumentStore, a PositionEncoding and a reference to the CSS data.
@@ -19,7 +17,7 @@ pub struct LanguageService {
 }
 
 impl LanguageService {
-    /// Create a new LanguageService. This will create a {DocumentStore} internally. See {LanguageServiceOptions} for more information on the options available or {LanguageService::new_with_store} if you want to use an existing {DocumentStore}.
+    /// Create a new LanguageService. This will create a `DocumentStore`` internally. See `LanguageServiceOptions` for more information on the options available or `LanguageService::new_with_store` if you want to use an existing `DocumentStore`.
     ///
     /// ## Example
     /// ```rust
@@ -46,7 +44,7 @@ impl LanguageService {
         }
     }
 
-    /// Create a new LanguageService with an already existing DocumentStore. This can be useful to share the same DocumentStore between multiple LanguageServices. If you do not need to share the DocumentStore, you can use the LanguageService::new() method instead.
+    /// Create a new `LanguageService` with an already existing `DocumentStore`. This can be useful to share the same `DocumentStore` between multiple `LanguageService`s. If you do not need to share the `DocumentStore`, you can use the `LanguageService::new()` method instead.
     ///
     /// ## Example
     ///
@@ -74,7 +72,7 @@ impl LanguageService {
         }
     }
 
-    /// Add custom CSS data to the LanguageService. This can be useful to add custom CSS properties, at-rules, or pseudo-classes to the LanguageService.
+    /// Add custom CSS data to the `LanguageService`. This can be useful to add custom CSS properties, at-rules, or pseudo-classes to the `LanguageService`.
     ///
     /// ## Example
     ///
@@ -136,7 +134,6 @@ impl Default for LanguageService {
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct LanguageServiceOptions {
     #[serde(default)]
     pub encoding: PositionEncoding,
@@ -168,7 +165,7 @@ pub mod wasm_bindings {
 
     // We use a different struct for the WASM bindings because otherwise implementations conflicts with the non-WASM version
     // which works just fine when using a single feature, but makes development harder when using both features at the same time.
-    #[wasm_bindgen]
+    #[wasm_bindgen(skip_typescript)]
     pub struct WASMLanguageService {
         pub(crate) store: DocumentStore,
         pub(crate) options: LanguageServiceOptions,
@@ -176,9 +173,27 @@ pub mod wasm_bindings {
         pub(crate) css_data: Vec<CssCustomData>,
     }
 
+    #[wasm_bindgen(typescript_custom_section)]
+    const TS_TYPE: &'static str = r#"
+    export interface LanguageServiceOptions {
+        encoding?: PositionEncoding;
+        include_base_css_custom_data?: boolean;
+    }
+
+    export class WASMLanguageService {
+        constructor(options: LanguageServiceOptions);
+        upsertDocument(document: import("vscode-languageserver-textdocument").TextDocument): void;
+        getHover: typeof get_hover;
+        getDocumentColors: typeof get_document_colors;
+        getColorPresentations: typeof get_color_presentations;
+        getFoldingRanges: typeof get_folding_ranges;
+        free(): void;
+    }
+    "#;
+
     #[wasm_bindgen]
     impl WASMLanguageService {
-        #[wasm_bindgen(constructor)]
+        #[wasm_bindgen(constructor, skip_typescript)]
         pub fn new(options: JsValue) -> Self {
             console_error_panic_hook::set_once();
             let options: LanguageServiceOptions = serde_wasm_bindgen::from_value(options).unwrap();
@@ -198,7 +213,7 @@ pub mod wasm_bindings {
             }
         }
 
-        #[wasm_bindgen]
+        #[wasm_bindgen(skip_typescript, js_name = upsertDocument)]
         pub fn upsert_document(&mut self, document: JsValue) {
             let document = create_text_document(document);
             self.store.upsert_document(document);

@@ -347,9 +347,14 @@ mod wasm_bindings {
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
+    #[wasm_bindgen(typescript_custom_section)]
+    const TS_APPEND_CONTENT: &'static str = r#"
+        declare function get_hover(documentUri: string, position:  import("vscode-languageserver-types").Position): import("vscode-languageserver-types").FoldingRange[];
+    "#;
+
     #[wasm_bindgen]
     impl WASMLanguageService {
-        #[wasm_bindgen]
+        #[wasm_bindgen(skip_typescript, js_name = getHover)]
         pub fn get_hover(&self, document_uri: String, position: JsValue) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 

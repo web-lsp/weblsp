@@ -187,9 +187,14 @@ mod wasm_bindings {
     use lsp_types::Uri;
     use wasm_bindgen::prelude::*;
 
+    #[wasm_bindgen(typescript_custom_section)]
+    const TS_APPEND_CONTENT: &'static str = r#"
+        declare function get_folding_ranges(documentUri: string): import("vscode-languageserver-types").FoldingRange[];
+    "#;
+
     #[wasm_bindgen]
     impl WASMLanguageService {
-        #[wasm_bindgen]
+        #[wasm_bindgen(skip_typescript, js_name = getFoldingRanges)]
         pub fn get_folding_ranges(&self, document_uri: String) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 

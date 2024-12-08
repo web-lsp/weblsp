@@ -180,18 +180,19 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
+    use std::str::FromStr;
+
     use super::compute_folding_ranges;
-    use crate::{
-        service::wasm_bindings::WASMLanguageService, wasm_text_document::create_text_document,
-    };
+    use crate::service::wasm_bindings::WASMLanguageService;
+    use lsp_types::Uri;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
     impl WASMLanguageService {
         #[wasm_bindgen]
         pub fn get_folding_ranges(&self, document: JsValue) -> JsValue {
-            let document = create_text_document(document);
-            let store_document = self.store.get(&document.uri);
+            let document_uri = document.as_string().unwrap();
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let folding_ranges = match store_document {
                 Some(store_document) => {

@@ -33,7 +33,7 @@ const color = (await ls.get_document_colors(textDocument))[0];
 
 describe("Document colors", async () => {
 	bench("CSSLSRS(WASM) - Document colors", async () => {
-		await ls.get_document_colors(textDocument);
+		await ls.get_document_colors(textDocument.uri);
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Document colors", () => {

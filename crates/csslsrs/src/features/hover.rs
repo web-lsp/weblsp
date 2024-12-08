@@ -338,12 +338,12 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
+    use std::str::FromStr;
+
     use super::extract_hover_information;
-    use crate::{
-        service::wasm_bindings::WASMLanguageService, wasm_text_document::create_text_document,
-    };
+    use crate::service::wasm_bindings::WASMLanguageService;
     use biome_rowan::AstNode;
-    use lsp_types::Position;
+    use lsp_types::{Position, Uri};
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
@@ -351,8 +351,8 @@ mod wasm_bindings {
     impl WASMLanguageService {
         #[wasm_bindgen]
         pub fn get_hover(&self, document: JsValue, position: JsValue) -> JsValue {
-            let document = create_text_document(document);
-            let store_document = self.store.get(&document.uri);
+            let document_uri = document.as_string().unwrap();
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let hover_info = match store_document {
                 Some(store_document) => {

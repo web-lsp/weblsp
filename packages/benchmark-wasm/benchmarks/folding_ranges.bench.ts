@@ -41,14 +41,14 @@ h4 {
 
 const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
 const ls = new LanguageService({
-	include_base_css_custom_data: true,
+	include_base_css_custom_data: false,
 });
 
-await ls.upsert_document(textDocument);
+ls.upsert_document(textDocument);
 
 describe("Folding Ranges", async () => {
 	bench("CSSLSRS(WASM) - Folding Ranges", async () => {
-		await ls.get_folding_ranges(textDocument);
+		await ls.get_folding_ranges(textDocument.uri);
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Folding Ranges", () => {

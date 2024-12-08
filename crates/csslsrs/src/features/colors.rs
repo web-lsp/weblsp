@@ -151,11 +151,12 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
-    use crate::{
-        service::wasm_bindings::WASMLanguageService, wasm_text_document::create_text_document,
-    };
+    use std::str::FromStr;
+
+    use crate::service::wasm_bindings::WASMLanguageService;
 
     use super::{compute_color_presentations, find_document_colors};
+    use lsp_types::Uri;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
@@ -163,8 +164,8 @@ mod wasm_bindings {
     impl WASMLanguageService {
         #[wasm_bindgen]
         pub fn get_document_colors(&self, document: JsValue) -> JsValue {
-            let document = create_text_document(document);
-            let store_document = self.store.get(&document.uri);
+            let document_uri = document.as_string().unwrap();
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let document_colors = match store_document {
                 Some(store_document) => find_document_colors(

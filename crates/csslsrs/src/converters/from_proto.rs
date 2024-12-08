@@ -13,12 +13,12 @@ pub(crate) fn offset(
             line: position.line,
             col: position.character,
         },
-        PositionEncoding::Wide(enc) => {
+        PositionEncoding::Utf16 | PositionEncoding::Utf32 => {
             let line_col = WideLineCol {
                 line: position.line,
                 col: position.character,
             };
-            line_index.to_utf8(enc, line_col)
+            line_index.to_utf8(position_encoding, line_col)
         }
     };
 

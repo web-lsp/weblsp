@@ -321,7 +321,6 @@ fn is_identifier_char(c: char) -> bool {
 impl LanguageService {
     /// Gets the hover information for the given CSS document and position.
     pub fn get_hover(&self, document: TextDocumentItem, position: Position) -> Option<Hover> {
-        let css_custom_data = self.get_css_custom_data();
         let store_entry = self.store.get(&document.uri);
 
         match store_entry {
@@ -330,7 +329,7 @@ impl LanguageService {
                 position,
                 &store_entry.line_index,
                 self.options.encoding,
-                &css_custom_data,
+                &self.get_css_custom_data(),
             ))?,
             None => None,
         }
@@ -341,35 +340,36 @@ impl LanguageService {
 mod wasm_bindings {
     use super::extract_hover_information;
     use crate::{
-        converters::{line_index::LineIndex, PositionEncoding, WideEncoding},
-        css_data::BASE_CSS_DATA,
-        parser::parse_css,
-        wasm_text_document::create_text_document,
+        service::wasm_bindings::WASMLanguageService, wasm_text_document::create_text_document,
     };
     use biome_rowan::AstNode;
     use lsp_types::Position;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
-    #[wasm_bindgen(typescript_custom_section)]
-    const TS_APPEND_CONTENT: &'static str = r#"export async function get_hover(document: import("vscode-languageserver-textdocument").TextDocument, position: import("vscode-languageserver-types").Position): Promise<import("vscode-languageserver-types").Hover | null>;"#;
+    #[wasm_bindgen]
+    impl WASMLanguageService {
+        #[wasm_bindgen]
+        pub fn get_hover(&self, document: JsValue, position: JsValue) -> JsValue {
+            let document = create_text_document(document);
+            let store_document = self.store.get(&document.uri);
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn get_hover(document: JsValue, position: JsValue) -> JsValue {
-        let parsed_text_document = create_text_document(document);
-        let position: Position = serde_wasm_bindgen::from_value(position).unwrap();
-        let css_parse = parse_css(&parsed_text_document.text);
-        let line_index = LineIndex::new(&parsed_text_document.text);
-        let encoding = PositionEncoding::Wide(WideEncoding::Utf16);
+            let hover_info = match store_document {
+                Some(store_document) => {
+                    let position: Position = serde_wasm_bindgen::from_value(position).unwrap();
 
-        let hover = extract_hover_information(
-            css_parse.tree().syntax(),
-            position,
-            &line_index,
-            encoding,
-            &vec![&BASE_CSS_DATA],
-        );
+                    extract_hover_information(
+                        store_document.css_tree.tree().syntax(),
+                        position,
+                        &store_document.line_index,
+                        self.options.encoding,
+                        &self.get_css_custom_data(),
+                    )
+                }
+                None => None,
+            };
 
-        serde_wasm_bindgen::to_value(&hover).unwrap()
+            serde_wasm_bindgen::to_value(&hover_info).unwrap()
+        }
     }
 }

@@ -1,11 +1,18 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { get_hover } from "../../../csslsrs/dist/index";
+import { LanguageService } from "../../../csslsrs/dist/index";
 
 describe("Hover", () => {
-	it("Can return hover", async () => {
-		const myDocument = TextDocument.create(
+	let ls: LanguageService;
+	let document: TextDocument;
+
+	before(() => {
+		ls = new LanguageService({
+			include_base_css_custom_data: true,
+		});
+
+		document = TextDocument.create(
 			"file:///test.css",
 			"css",
 			0,
@@ -13,7 +20,12 @@ describe("Hover", () => {
   background-color: #fff;
     }`
 		);
-		const hover = await get_hover(myDocument, { line: 0, character: 3 });
+
+		ls.upsert_document(document);
+	});
+
+	it("Can return hover", async () => {
+		const hover = await ls.get_hover(document, { line: 0, character: 3 });
 
 		expect(hover).to.deep.equal({
 			contents: {

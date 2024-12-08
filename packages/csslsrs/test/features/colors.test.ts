@@ -1,20 +1,29 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import {
-	get_document_colors,
-	get_color_presentations,
-} from "../../dist/generated/csslsrs.js";
+import { LanguageService } from "../../dist";
 
 describe("Colors", () => {
-	it("Can return document colors", async () => {
-		const myDocument = TextDocument.create(
+	let ls: LanguageService;
+	let document: TextDocument;
+
+	before(() => {
+		ls = new LanguageService({
+			include_base_css_custom_data: true,
+		});
+
+		document = TextDocument.create(
 			"file:///test.css",
 			"css",
 			0,
 			"body {\n    color: red;\n    background-color: #fff;\n}\n"
 		);
-		const colors = await get_document_colors(myDocument);
+
+		ls.upsert_document(document);
+	});
+
+	it("Can return document colors", async () => {
+		const colors = await ls.get_document_colors(document);
 
 		expect(colors).to.deep.equal([
 			{
@@ -57,18 +66,10 @@ describe("Colors", () => {
 	});
 
 	it("Can return color presentations", async () => {
-		const myDocument = TextDocument.create(
-			"file:///test.css",
-			"css",
-			0,
-			"body {\n    color: red;\n    background-color: #fff;\n}\n"
-		);
-		const colors = await get_document_colors(myDocument);
-		const color = colors[0];
-		const colorPresentations = await get_color_presentations(
-			color,
-			color.range
-		);
+		const colors = await ls.get_document_colors(document);
+		const firstcolor = colors[0];
+
+		const colorPresentations = await ls.get_color_presentations(firstcolor);
 
 		expect(colorPresentations).not.to.be.empty;
 	});

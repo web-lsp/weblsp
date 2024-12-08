@@ -25,14 +25,11 @@ pub fn handle_request(
         }
         "textDocument/colorPresentation" => {
             let (id, params) = cast::<lsp_types::request::ColorPresentationRequest>(req)?;
-            let presentations = language_service.get_color_presentations(
-                lsp_types::ColorInformation {
+            let presentations =
+                language_service.get_color_presentations(lsp_types::ColorInformation {
                     color: params.color,
                     range: params.range,
-                },
-                // Erika se fout de ma gueule
-                params.range,
-            );
+                });
             send_result(
                 connection,
                 id,

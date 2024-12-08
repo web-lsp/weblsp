@@ -36,7 +36,7 @@ fn get_color_presentations_benchmark(c: &mut Criterion) {
     let color = colors.first().unwrap();
 
     c.bench_function("get_color_presentations", |b| {
-        b.iter(|| ls.get_color_presentations(black_box(color.clone()), black_box(color.range)))
+        b.iter(|| ls.get_color_presentations(black_box(color.clone())))
     });
 }
 

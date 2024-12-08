@@ -310,7 +310,7 @@ fn assert_color_presentations(
     expected_presentations_texts: Vec<&str>,
 ) {
     let range = color.range;
-    let presentations = ls.get_color_presentations(color, range);
+    let presentations = ls.get_color_presentations(color);
 
     assert_eq!(
         presentations.len(),

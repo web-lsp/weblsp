@@ -1,15 +1,16 @@
+use crate::store::StoreEntry;
 use crate::{
     converters::PositionEncoding,
     css_data::{CssCustomData, BASE_CSS_DATA, EMPTY_CSS_DATA},
-    store::{DocumentStore, StoreEntry},
+    store::DocumentStore,
 };
 use lsp_types::{TextDocumentItem, Uri};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::wasm_bindgen;
 
 /// The Language Service is the main entry point for interacting with CSSlsrs.
 /// It contains a DocumentStore, a PositionEncoding and a reference to the CSS data.
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct LanguageService {
     pub(crate) store: DocumentStore,
     pub(crate) options: LanguageServiceOptions,
@@ -17,7 +18,6 @@ pub struct LanguageService {
     pub(crate) css_data: Vec<CssCustomData>,
 }
 
-#[cfg(not(feature = "wasm"))]
 impl LanguageService {
     /// Create a new LanguageService. This will create a {DocumentStore} internally. See {LanguageServiceOptions} for more information on the options available or {LanguageService::new_with_store} if you want to use an existing {DocumentStore}.
     ///
@@ -112,15 +112,6 @@ impl LanguageService {
     pub fn add_css_custom_data(&mut self, data: CssCustomData) {
         self.css_data.push(data);
     }
-}
-
-impl LanguageService {
-    pub(crate) fn get_css_custom_data(&self) -> Vec<&CssCustomData> {
-        // Merge the base CSS data with the custom CSS data into a single vector for easier iteration
-        std::iter::once(self.base_css_data)
-            .chain(self.css_data.iter())
-            .collect()
-    }
 
     pub fn get_document(&self, uri: &Uri) -> Option<&StoreEntry> {
         self.store.get(uri)
@@ -129,50 +120,73 @@ impl LanguageService {
     pub fn upsert_document(&mut self, document: TextDocumentItem) -> &StoreEntry {
         self.store.upsert_document(document)
     }
+
+    pub(crate) fn get_css_custom_data(&self) -> Vec<&CssCustomData> {
+        // Merge the base CSS data with the custom CSS data into a single vector for easier iteration
+        std::iter::once(self.base_css_data)
+            .chain(self.css_data.iter())
+            .collect()
+    }
 }
 
-#[cfg(not(feature = "wasm"))]
 impl Default for LanguageService {
     fn default() -> Self {
         LanguageService::new(LanguageServiceOptions::default())
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct LanguageServiceOptions {
+    #[serde(default)]
     pub encoding: PositionEncoding,
+    #[serde(default)]
     pub include_base_css_custom_data: bool,
 }
 
 impl Default for LanguageServiceOptions {
     fn default() -> Self {
         LanguageServiceOptions {
-            encoding: PositionEncoding::Wide(crate::converters::WideEncoding::Utf16),
+            encoding: PositionEncoding::Utf16,
             include_base_css_custom_data: true,
         }
     }
 }
 
 #[cfg(feature = "wasm")]
-mod wasm_bindings {
-    use serde::{Deserialize, Serialize};
+pub mod wasm_bindings {
     use wasm_bindgen::prelude::wasm_bindgen;
+    use wasm_bindgen::JsValue;
 
-    use crate::converters::PositionEncoding;
+    use crate::css_data::CssCustomData;
     use crate::service::{BASE_CSS_DATA, EMPTY_CSS_DATA};
     use crate::store::DocumentStore;
+    use crate::wasm_text_document::create_text_document;
 
-    use super::{LanguageService, LanguageServiceOptions};
+    use super::LanguageServiceOptions;
+    extern crate console_error_panic_hook;
+
+    // We use a different struct for the WASM bindings because otherwise implementations conflicts with the non-WASM version
+    // which works just fine when using a single feature, but makes development harder when using both features at the same time.
+    #[wasm_bindgen]
+    pub struct WASMLanguageService {
+        pub(crate) store: DocumentStore,
+        pub(crate) options: LanguageServiceOptions,
+        base_css_data: &'static CssCustomData,
+        pub(crate) css_data: Vec<CssCustomData>,
+    }
 
     #[wasm_bindgen]
-    impl LanguageService {
+    impl WASMLanguageService {
         #[wasm_bindgen(constructor)]
-        pub fn new(options: JSLanguageServiceOptions) -> Self {
+        pub fn new(options: JsValue) -> Self {
+            console_error_panic_hook::set_once();
+            let options: LanguageServiceOptions = serde_wasm_bindgen::from_value(options).unwrap();
             let include_base_css_custom_data = options.include_base_css_custom_data;
 
-            LanguageService {
+            WASMLanguageService {
                 store: DocumentStore::new(),
-                options: options.into(),
+                options,
                 base_css_data: {
                     if include_base_css_custom_data {
                         &BASE_CSS_DATA
@@ -183,58 +197,24 @@ mod wasm_bindings {
                 css_data: vec![],
             }
         }
+
+        #[wasm_bindgen]
+        pub fn upsert_document(&mut self, document: JsValue) {
+            let document = create_text_document(document);
+            self.store.upsert_document(document);
+        }
+
+        pub(crate) fn get_css_custom_data(&self) -> Vec<&CssCustomData> {
+            // Merge the base CSS data with the custom CSS data into a single vector for easier iteration
+            std::iter::once(self.base_css_data)
+                .chain(self.css_data.iter())
+                .collect()
+        }
     }
 
-    impl Default for LanguageService {
+    impl Default for WASMLanguageService {
         fn default() -> Self {
-            LanguageService::new(JSLanguageServiceOptions::default())
-        }
-    }
-
-    #[wasm_bindgen]
-    #[derive(Deserialize, Serialize)]
-    pub enum JSPositionEncoding {
-        Utf8,
-        Utf16,
-        Utf32,
-    }
-
-    impl From<JSPositionEncoding> for PositionEncoding {
-        fn from(js_encoding: JSPositionEncoding) -> Self {
-            match js_encoding {
-                JSPositionEncoding::Utf8 => PositionEncoding::Utf8,
-                JSPositionEncoding::Utf16 => {
-                    PositionEncoding::Wide(crate::converters::WideEncoding::Utf16)
-                }
-                JSPositionEncoding::Utf32 => {
-                    PositionEncoding::Wide(crate::converters::WideEncoding::Utf32)
-                }
-            }
-        }
-    }
-
-    #[derive(Deserialize, Serialize)]
-    #[wasm_bindgen]
-    pub struct JSLanguageServiceOptions {
-        encoding: JSPositionEncoding,
-        include_base_css_custom_data: bool,
-    }
-
-    impl Default for JSLanguageServiceOptions {
-        fn default() -> Self {
-            JSLanguageServiceOptions {
-                encoding: JSPositionEncoding::Utf16,
-                include_base_css_custom_data: true,
-            }
-        }
-    }
-
-    impl From<JSLanguageServiceOptions> for LanguageServiceOptions {
-        fn from(js_options: JSLanguageServiceOptions) -> Self {
-            LanguageServiceOptions {
-                encoding: js_options.encoding.into(),
-                include_base_css_custom_data: js_options.include_base_css_custom_data,
-            }
+            WASMLanguageService::new(JsValue::NULL)
         }
     }
 }

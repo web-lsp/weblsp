@@ -180,31 +180,32 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
+    use std::str::FromStr;
+
     use super::compute_folding_ranges;
-    use crate::converters::line_index::LineIndex;
-    use serde_wasm_bindgen;
+    use crate::service::wasm_bindings::WASMLanguageService;
+    use lsp_types::Uri;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen(typescript_custom_section)]
     const TS_APPEND_CONTENT: &'static str = r#"
-/**
- * Get the folding ranges for the given CSS source code. It supports CSS blocks enclosed in
- * braces, multi-line comments, and regions marked with `#region` and `#endregion` comments.
- *
- * @param source The CSS source code as a `TextDocument`.
- * @returns A list of `FoldingRange` objects indicating the foldable regions in the CSS code.
- */
-export async function get_folding_ranges(source: import("vscode-languageserver-textdocument").TextDocument): Promise<import("vscode-languageserver-types").FoldingRange[]>;
-"#;
+        declare function get_folding_ranges(documentUri: string): import("vscode-languageserver-types").FoldingRange[];
+    "#;
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn get_folding_ranges(document: JsValue) -> JsValue {
-        let parsed_text_document = crate::wasm_text_document::create_text_document(document);
-        let folding_ranges = compute_folding_ranges(
-            &parsed_text_document,
-            &LineIndex::new(&parsed_text_document.text),
-        );
+    #[wasm_bindgen]
+    impl WASMLanguageService {
+        #[wasm_bindgen(skip_typescript, js_name = getFoldingRanges)]
+        pub fn get_folding_ranges(&self, document_uri: String) -> JsValue {
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
-        serde_wasm_bindgen::to_value(&folding_ranges).unwrap()
+            let folding_ranges = match store_document {
+                Some(store_document) => {
+                    compute_folding_ranges(&store_document.document, &store_document.line_index)
+                }
+                None => Vec::new(),
+            };
+
+            serde_wasm_bindgen::to_value(&folding_ranges).unwrap()
+        }
     }
 }

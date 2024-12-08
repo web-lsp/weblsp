@@ -1,7 +1,7 @@
 use biome_css_parser::CssParse;
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
-use lsp_types::{ColorInformation, ColorPresentation, Range, TextDocumentItem, TextEdit};
+use lsp_types::{ColorInformation, ColorPresentation, TextDocumentItem, TextEdit};
 use palette::{named, Hsla, Hwba, Laba, Lcha, Srgba, WithAlpha};
 
 use crate::{
@@ -84,7 +84,7 @@ fn find_document_colors(
     extract_colors_information(binding.syntax(), line_index, encoding)
 }
 
-fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<ColorPresentation> {
+fn compute_color_presentations(color: ColorInformation) -> Vec<ColorPresentation> {
     let rgb_color = Srgba::from_lsp_color(color.color);
 
     let mut color_texts: Vec<String> = vec![];
@@ -120,7 +120,7 @@ fn compute_color_presentations(color: ColorInformation, range: Range) -> Vec<Col
         .map(|text| ColorPresentation {
             label: text.clone(),
             text_edit: Some(TextEdit {
-                range,
+                range: color.range,
                 new_text: text,
             }),
             additional_text_edits: None,
@@ -144,50 +144,52 @@ impl LanguageService {
         }
     }
 
-    pub fn get_color_presentations(
-        &self,
-        color: ColorInformation,
-        range: Range,
-    ) -> Vec<ColorPresentation> {
-        compute_color_presentations(color, range)
+    pub fn get_color_presentations(&self, color: ColorInformation) -> Vec<ColorPresentation> {
+        compute_color_presentations(color)
     }
 }
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
-    use crate::{
-        converters::{line_index::LineIndex, PositionEncoding},
-        parser::parse_css,
-    };
+    use std::str::FromStr;
+
+    use crate::service::wasm_bindings::WASMLanguageService;
 
     use super::{compute_color_presentations, find_document_colors};
+    use lsp_types::Uri;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen(typescript_custom_section)]
-    const TS_APPEND_CONTENT: &'static str = r#"export async function get_document_colors(source: import("vscode-languageserver-textdocument").TextDocument): Promise<import("vscode-languageserver-types").ColorInformation[]>;"#;
+    const TS_APPEND_CONTENT: &'static str = r#"
+        declare function get_document_colors(documentUri: string): import("vscode-languageserver-types").ColorInformation[];
+        declare function get_color_presentations(color: import("vscode-languageserver-types").ColorInformation): import("vscode-languageserver-types").ColorPresentation[];
+    "#;
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn get_document_colors(document: JsValue) -> JsValue {
-        let parsed_text_document = crate::wasm_text_document::create_text_document(document);
-        let document_colors = find_document_colors(
-            &parse_css(&parsed_text_document.text),
-            &LineIndex::new(&parsed_text_document.text),
-            PositionEncoding::Wide(crate::converters::WideEncoding::Utf16),
-        );
+    #[wasm_bindgen]
+    impl WASMLanguageService {
+        #[wasm_bindgen(skip_typescript, js_name = getDocumentColors)]
+        pub fn get_document_colors(&self, document_uri: String) -> JsValue {
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
-        serde_wasm_bindgen::to_value(&document_colors).unwrap()
-    }
+            let document_colors = match store_document {
+                Some(store_document) => find_document_colors(
+                    &store_document.css_tree,
+                    &store_document.line_index,
+                    self.options.encoding,
+                ),
+                None => vec![],
+            };
 
-    #[wasm_bindgen(typescript_custom_section)]
-    const TS_APPEND_CONTENT: &'static str = r#"export async function get_color_presentations(color: import("vscode-languageserver-types").ColorInformation, range: import("vscode-languageserver-types").Range): Promise<import("vscode-languageserver-types").ColorPresentation[]>;"#;
+            serde_wasm_bindgen::to_value(&document_colors).unwrap()
+        }
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn get_color_presentations(color: JsValue, range: JsValue) -> JsValue {
-        let color = serde_wasm_bindgen::from_value(color).unwrap();
-        let range = serde_wasm_bindgen::from_value(range).unwrap();
-        let color_presentations = compute_color_presentations(color, range);
+        #[wasm_bindgen(skip_typescript, js_name = getColorPresentations)]
+        pub fn get_color_presentations(&self, color: JsValue) -> JsValue {
+            let color = serde_wasm_bindgen::from_value(color).unwrap();
+            let color_presentations = compute_color_presentations(color);
 
-        serde_wasm_bindgen::to_value(&color_presentations).unwrap()
+            serde_wasm_bindgen::to_value(&color_presentations).unwrap()
+        }
     }
 }

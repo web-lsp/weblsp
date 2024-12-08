@@ -13,7 +13,7 @@ fn get_colors_benchmark(c: &mut Criterion) {
         text: "body { color: red; }".to_string(),
     };
 
-    ls.store.upsert_document(document.clone());
+    ls.upsert_document(document.clone());
 
     c.bench_function("get_document_colors", |b| {
         b.iter(|| ls.get_document_colors(black_box(document.clone())))
@@ -30,13 +30,13 @@ fn get_color_presentations_benchmark(c: &mut Criterion) {
         text: "body { color: red; }".to_string(),
     };
 
-    ls.store.upsert_document(document.clone());
+    ls.upsert_document(document.clone());
 
     let colors = ls.get_document_colors(document);
     let color = colors.first().unwrap();
 
     c.bench_function("get_color_presentations", |b| {
-        b.iter(|| ls.get_color_presentations(black_box(color.clone()), black_box(color.range)))
+        b.iter(|| ls.get_color_presentations(black_box(color.clone())))
     });
 }
 

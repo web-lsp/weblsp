@@ -1,3 +1,6 @@
+// TODO: Split this off to a separate crate, as it's not specific to CSSlsrs.
+// Ideally, this would be generic, so that HTML, CSS, MD etc. could all use the same store, allowing for cross-language features.
+
 use std::collections::hash_map::Entry;
 
 use biome_css_parser::CssParse;

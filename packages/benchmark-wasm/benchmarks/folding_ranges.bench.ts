@@ -1,4 +1,4 @@
-import { get_folding_ranges } from "csslsrs";
+import { LanguageService } from "csslsrs";
 import { getCSSLanguageService } from "vscode-css-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { bench, describe } from "vitest";
@@ -40,15 +40,19 @@ h4 {
 `;
 
 const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
+const ls = new LanguageService({
+	include_base_css_custom_data: false,
+});
+
+ls.upsertDocument(textDocument);
 
 describe("Folding Ranges", async () => {
-	bench("CSSLSRS(WASM) - Folding Ranges", async () => {
-		await get_folding_ranges(textDocument);
+	bench("CSSLSRS(WASM) - Folding Ranges", () => {
+		ls.getFoldingRanges(textDocument.uri);
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Folding Ranges", () => {
-			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
-			vscodeLanguageService.getFoldingRanges(textDocument, stylesheet);
+			vscodeLanguageService.getFoldingRanges(textDocument);
 		});
 	}
 });

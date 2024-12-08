@@ -41,7 +41,7 @@ fn get_language_id(
     let text_document_uri = lsp_types::Uri::from_str(text_document_identifier)
         .map_err(|_| "Invalid 'textDocument.uri' in request parameters")?;
 
-    let store_entry = match css_language_service.store.get(&text_document_uri) {
+    let store_entry = match css_language_service.get_document(&text_document_uri) {
         Some(doc) => doc,
         None => return Err(Box::from("Document not found")),
     };

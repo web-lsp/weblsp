@@ -8,6 +8,7 @@ pub mod store;
 pub mod features {
     pub mod color_parser;
     pub mod colors;
+    pub mod document_symbols;
     pub mod folding;
     pub mod hover;
 }

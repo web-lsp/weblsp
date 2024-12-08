@@ -29,7 +29,7 @@ const ls = new LanguageService({
 
 await ls.upsert_document(textDocument);
 
-const color = (await ls.get_document_colors(textDocument))[0];
+const color = (await ls.get_document_colors(textDocument.uri))[0];
 
 describe("Document colors", async () => {
 	bench("CSSLSRS(WASM) - Document colors", async () => {

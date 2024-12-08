@@ -35,14 +35,17 @@ h1 > span {
 	await ls.upsert_document(textDocument);
 
 	bench("CSSLSRS(WASM) - Hover", async () => {
-		await ls.get_hover(textDocument.uri, { line: 4, character: 3 });
+		await ls.get_hover(textDocument.uri, {
+			line: 14,
+			character: 3,
+		});
 	});
 	if (!process.env.CODSPEED) {
 		bench("vscode-css-languageservice - Hover", () => {
 			const stylesheet = vscodeLanguageService.parseStylesheet(textDocument);
 			vscodeLanguageService.doHover(
 				textDocument,
-				{ line: 4, character: 3 },
+				{ line: 14, character: 3 },
 				stylesheet
 			);
 		});

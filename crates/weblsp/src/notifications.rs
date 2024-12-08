@@ -24,9 +24,7 @@ pub fn handle_notification(
                     eprintln!(
                         "textDocument/didOpen: adding CSS document to CSS Language Service store"
                     );
-                    css_language_service
-                        .store
-                        .upsert_document(params.text_document);
+                    css_language_service.upsert_document(params.text_document);
                 }
                 _ => {
                     eprintln!(
@@ -40,15 +38,13 @@ pub fn handle_notification(
             // We need to update the document in the store with the new content at each change.
             let params: DidChangeTextDocumentParams =
                 serde_json::from_value(notification.params).unwrap();
-            css_language_service
-                .store
-                .upsert_document(TextDocumentItem {
-                    uri: params.text_document.uri,
-                    language_id: "css".to_string(),
-                    version: params.text_document.version,
-                    // Since we only support full text sync, we can just take the first change.
-                    text: params.content_changes[0].text.clone(),
-                });
+            css_language_service.upsert_document(TextDocumentItem {
+                uri: params.text_document.uri,
+                language_id: "css".to_string(),
+                version: params.text_document.version,
+                // Since we only support full text sync, we can just take the first change.
+                text: params.content_changes[0].text.clone(),
+            });
         }
         _ => {
             eprintln!("unknown notification: {}", notification.method);

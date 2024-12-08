@@ -13,7 +13,7 @@ fn get_hover_benchmark(c: &mut Criterion) {
         text: "body { color: red; }".to_string(),
     };
 
-    ls.store.upsert_document(document.clone());
+    ls.upsert_document(document.clone());
 
     c.bench_function("get_hover", |b| {
         b.iter(|| ls.get_hover(black_box(document.clone()), lsp_types::Position::new(0, 8)))

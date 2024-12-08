@@ -5,21 +5,27 @@ use wasm_bindgen::prelude::*;
 
 /// Convert a JS object to a TextDocumentItem.
 pub fn create_text_document(js_value: JsValue) -> TextDocumentItem {
-    let js_text_document: JSTextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
+    let js_text_document: VSCodeTextDocument = serde_wasm_bindgen::from_value(js_value).unwrap();
 
-    TextDocumentItem {
-        uri: js_text_document.uri,
-        language_id: js_text_document.language_id,
-        version: js_text_document.version,
-        text: js_text_document.content,
+    js_text_document.into()
+}
+
+impl From<VSCodeTextDocument> for TextDocumentItem {
+    fn from(val: VSCodeTextDocument) -> Self {
+        TextDocumentItem {
+            uri: val.uri,
+            language_id: val.language_id,
+            version: val.version,
+            text: val.content,
+        }
     }
 }
 
 /// VS Code's `vscode-languageserver-textdocument` has a slightly different representation of a text document than lsp-types, as such for the serialization
 /// and deserialization of text documents we need to use a custom struct in between. Bit annoying but it works.
-#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct JSTextDocument {
+struct VSCodeTextDocument {
     /// The text document's URI.
     pub uri: Uri,
 

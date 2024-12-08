@@ -1,17 +1,17 @@
 use biome_rowan::TextSize;
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 pub(crate) mod from_proto;
 pub(crate) mod line_index;
 pub(crate) mod to_proto;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Default)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum PositionEncoding {
     Utf8,
-    Wide(WideEncoding),
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum WideEncoding {
+    #[default]
     Utf16,
     Utf32,
 }
@@ -48,9 +48,10 @@ impl WideChar {
     }
 
     /// Returns the length in UTF-16 or UTF-32 code units.
-    fn wide_len(&self, enc: WideEncoding) -> usize {
+    fn wide_len(&self, enc: PositionEncoding) -> usize {
         match enc {
-            WideEncoding::Utf16 => {
+            PositionEncoding::Utf8 => panic!("Encoding isn't wide"),
+            PositionEncoding::Utf16 => {
                 if self.len() == TextSize::from(4) {
                     2
                 } else {
@@ -58,7 +59,7 @@ impl WideChar {
                 }
             }
 
-            WideEncoding::Utf32 => 1,
+            PositionEncoding::Utf32 => 1,
         }
     }
 }
@@ -68,14 +69,14 @@ mod tests {
     use crate::converters::from_proto::offset;
     use crate::converters::line_index::LineIndex;
     use crate::converters::to_proto::position;
-    use crate::converters::WideEncoding::{Utf16, Utf32};
-    use crate::converters::{LineCol, PositionEncoding, WideEncoding};
+    use crate::converters::PositionEncoding::{Utf16, Utf32};
+    use crate::converters::{LineCol, PositionEncoding};
     use biome_rowan::TextSize;
     use lsp_types::Position;
 
     macro_rules! check_conversion {
         ($line_index:ident : $position:expr => $text_size:expr ) => {
-            let position_encoding = PositionEncoding::Wide(WideEncoding::Utf16);
+            let position_encoding = PositionEncoding::Utf16;
 
             let offset = offset(&$line_index, $position, position_encoding).ok();
             assert_eq!(offset, Some($text_size));
@@ -155,6 +156,7 @@ mod tests {
                 let want_col = match enc {
                     Utf16 => col_utf16,
                     Utf32 => col_utf32,
+                    _ => unreachable!(),
                 };
                 assert_eq!(wide_lin_col.col, want_col)
             }

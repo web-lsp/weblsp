@@ -3,9 +3,11 @@
 
 use std::mem;
 
-use crate::converters::{LineCol, WideChar, WideEncoding, WideLineCol};
+use crate::converters::{LineCol, WideChar, WideLineCol};
 use biome_rowan::TextSize;
 use rustc_hash::FxHashMap;
+
+use super::PositionEncoding;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct LineIndex {
@@ -90,7 +92,7 @@ impl LineIndex {
             .map(|offset| offset + TextSize::from(line_col.col))
     }
 
-    pub fn to_wide(&self, enc: WideEncoding, line_col: LineCol) -> Option<WideLineCol> {
+    pub fn to_wide(&self, enc: PositionEncoding, line_col: LineCol) -> Option<WideLineCol> {
         let col = self.utf8_to_wide_col(enc, line_col.line, line_col.col.into());
         Some(WideLineCol {
             line: line_col.line,
@@ -99,7 +101,7 @@ impl LineIndex {
     }
 
     #[allow(dead_code)]
-    pub fn to_utf8(&self, enc: WideEncoding, line_col: WideLineCol) -> LineCol {
+    pub fn to_utf8(&self, enc: PositionEncoding, line_col: WideLineCol) -> LineCol {
         let col = self.wide_to_utf8_col(enc, line_col.line, line_col.col);
         LineCol {
             line: line_col.line,
@@ -107,7 +109,7 @@ impl LineIndex {
         }
     }
 
-    fn utf8_to_wide_col(&self, enc: WideEncoding, line: u32, col: TextSize) -> usize {
+    fn utf8_to_wide_col(&self, enc: PositionEncoding, line: u32, col: TextSize) -> usize {
         let mut res: usize = col.into();
         if let Some(wide_chars) = self.line_wide_chars.get(&line) {
             for c in wide_chars {
@@ -123,7 +125,7 @@ impl LineIndex {
         res
     }
 
-    fn wide_to_utf8_col(&self, enc: WideEncoding, line: u32, mut col: u32) -> TextSize {
+    fn wide_to_utf8_col(&self, enc: PositionEncoding, line: u32, mut col: u32) -> TextSize {
         if let Some(wide_chars) = self.line_wide_chars.get(&line) {
             for c in wide_chars {
                 if col > u32::from(c.start) {

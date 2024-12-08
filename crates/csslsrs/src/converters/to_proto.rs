@@ -12,8 +12,8 @@ pub(crate) fn position(
 
     let position = match position_encoding {
         PositionEncoding::Utf8 => lsp_types::Position::new(line_col.line, line_col.col),
-        PositionEncoding::Wide(enc) => {
-            let line_col = line_index.to_wide(enc, line_col).ok_or(())?;
+        PositionEncoding::Utf16 | PositionEncoding::Utf32 => {
+            let line_col = line_index.to_wide(position_encoding, line_col).ok_or(())?;
             lsp_types::Position::new(line_col.line, line_col.col)
         }
     };

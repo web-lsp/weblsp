@@ -1,5 +1,6 @@
 use biome_rowan::TextSize;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::wasm_bindgen;
 
 pub(crate) mod from_proto;
@@ -7,7 +8,7 @@ pub(crate) mod line_index;
 pub(crate) mod to_proto;
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Default)]
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum PositionEncoding {
     Utf8,
     #[default]

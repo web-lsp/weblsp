@@ -350,8 +350,7 @@ mod wasm_bindings {
     #[wasm_bindgen]
     impl WASMLanguageService {
         #[wasm_bindgen]
-        pub fn get_hover(&self, document: JsValue, position: JsValue) -> JsValue {
-            let document_uri = document.as_string().unwrap();
+        pub fn get_hover(&self, document_uri: String, position: JsValue) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let hover_info = match store_document {

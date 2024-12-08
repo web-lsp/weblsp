@@ -190,8 +190,7 @@ mod wasm_bindings {
     #[wasm_bindgen]
     impl WASMLanguageService {
         #[wasm_bindgen]
-        pub fn get_folding_ranges(&self, document: JsValue) -> JsValue {
-            let document_uri = document.as_string().unwrap();
+        pub fn get_folding_ranges(&self, document_uri: String) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let folding_ranges = match store_document {

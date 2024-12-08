@@ -163,8 +163,7 @@ mod wasm_bindings {
     #[wasm_bindgen]
     impl WASMLanguageService {
         #[wasm_bindgen]
-        pub fn get_document_colors(&self, document: JsValue) -> JsValue {
-            let document_uri = document.as_string().unwrap();
+        pub fn get_document_colors(&self, document_uri: String) -> JsValue {
             let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
             let document_colors = match store_document {

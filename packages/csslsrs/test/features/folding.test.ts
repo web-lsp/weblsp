@@ -18,7 +18,7 @@ describe("Folding", () => {
 		});
 		ls.upsert_document(myDocument);
 
-		const foldingRanges = await ls.get_folding_ranges(myDocument);
+		const foldingRanges = await ls.get_folding_ranges(myDocument.uri);
 
 		expect(foldingRanges).to.deep.equal([
 			{

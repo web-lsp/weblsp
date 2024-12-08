@@ -25,7 +25,7 @@ describe("Hover", () => {
 	});
 
 	it("Can return hover", async () => {
-		const hover = await ls.get_hover(document, { line: 0, character: 3 });
+		const hover = await ls.get_hover(document.uri, { line: 0, character: 3 });
 
 		expect(hover).to.deep.equal({
 			contents: {

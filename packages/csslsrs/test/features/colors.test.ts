@@ -23,7 +23,7 @@ describe("Colors", () => {
 	});
 
 	it("Can return document colors", async () => {
-		const colors = await ls.get_document_colors(document);
+		const colors = await ls.get_document_colors(document.uri);
 
 		expect(colors).to.deep.equal([
 			{
@@ -66,7 +66,7 @@ describe("Colors", () => {
 	});
 
 	it("Can return color presentations", async () => {
-		const colors = await ls.get_document_colors(document);
+		const colors = await ls.get_document_colors(document.uri);
 		const firstcolor = colors[0];
 
 		const colorPresentations = await ls.get_color_presentations(firstcolor);

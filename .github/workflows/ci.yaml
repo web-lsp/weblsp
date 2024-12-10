@@ -98,6 +98,9 @@ jobs:
           targets: wasm32-unknown-unknown
           bins: wasm-bindgen-cli, just, wasm-opt
 
+      - name: Build
+        run: just build
+
       - name: Build (WASM)
         run: just build-wasm
 

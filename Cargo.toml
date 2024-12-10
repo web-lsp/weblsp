@@ -10,6 +10,3 @@ codegen-units = 1
 [profile.benchmark]
 inherits = "release"
 debug = true
-
-[workspace.lints.clippy]
-pedantic = { level = "warn", priority = -1 }

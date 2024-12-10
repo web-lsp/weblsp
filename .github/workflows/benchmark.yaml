@@ -34,6 +34,9 @@ jobs:
           targets: wasm32-unknown-unknown
           bins: cargo-codspeed, wasm-bindgen-cli, just, wasm-opt
 
+      - name: Install dependencies
+        run: just install
+
       - name: Build (WASM)
         run: just build-wasm benchmark
 

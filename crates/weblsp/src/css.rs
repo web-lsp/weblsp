@@ -1,7 +1,11 @@
-use crate::cast;
 use csslsrs::service::LanguageService;
 use lsp_server::{Connection, Message, Request, Response};
+use lsp_types::request::{
+    ColorPresentationRequest, DocumentColor, FoldingRangeRequest, HoverRequest,
+};
 use std::error::Error;
+
+use crate::requests::cast;
 
 /// Initialize our CSS Language Service (CSSlsrs).
 /// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
@@ -18,13 +22,13 @@ pub fn handle_request(
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
     match req.method.as_str() {
         "textDocument/documentColor" => {
-            let (id, params) = cast::<lsp_types::request::DocumentColor>(req)?;
+            let (id, params) = cast::<DocumentColor>(req)?;
             let colors = language_service
                 .get_document_colors(get_text_document(params.text_document, language_service)?);
             send_result(connection, id, serde_json::to_value(&colors).unwrap())?;
         }
         "textDocument/colorPresentation" => {
-            let (id, params) = cast::<lsp_types::request::ColorPresentationRequest>(req)?;
+            let (id, params) = cast::<ColorPresentationRequest>(req)?;
             let presentations =
                 language_service.get_color_presentations(lsp_types::ColorInformation {
                     color: params.color,
@@ -37,13 +41,13 @@ pub fn handle_request(
             )?;
         }
         "textDocument/foldingRange" => {
-            let (id, params) = cast::<lsp_types::request::FoldingRangeRequest>(req)?;
+            let (id, params) = cast::<FoldingRangeRequest>(req)?;
             let ranges = language_service
                 .get_folding_ranges(get_text_document(params.text_document, language_service)?);
             send_result(connection, id, serde_json::to_value(&ranges).unwrap())?;
         }
         "textDocument/hover" => {
-            let (id, params) = cast::<lsp_types::request::HoverRequest>(req)?;
+            let (id, params) = cast::<HoverRequest>(req)?;
             let hover = language_service.get_hover(
                 get_text_document(
                     params.text_document_position_params.text_document,
@@ -69,6 +73,7 @@ fn get_text_document(
         None => return Err(Box::from("Document not found")),
     };
 
+    // TODO: It'd be great to avoid cloning the document here, might need to refactor methods to take a reference instead.
     Ok(text_document.document.clone())
 }
 

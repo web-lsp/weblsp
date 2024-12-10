@@ -1,7 +1,8 @@
-pub mod css;
-pub mod notifications;
-pub mod requests;
-use lsp_server::{Connection, ExtractError, Message, Request, RequestId};
+mod css;
+mod notifications;
+mod requests;
+mod response;
+use lsp_server::{Connection, Message};
 use lsp_types::{InitializeParams, ServerCapabilities, TextDocumentSyncCapability};
 use std::error::Error;
 
@@ -26,8 +27,9 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
         ..Default::default()
     })
     .unwrap();
+
     let initialization_params = match connection.initialize(server_capabilities) {
-        Ok(it) => it,
+        Ok(params) => params,
         Err(e) => {
             if e.channel_is_disconnected() {
                 io_threads.join()?;
@@ -35,11 +37,14 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
             return Err(e.into());
         }
     };
+
     // Init language services and start the main loop.
     let css_language_service = css::init_language_service();
     main_loop(connection, initialization_params, css_language_service)?;
+
     // Joins the IO threads to ensure all communication is properly finished.
     io_threads.join()?;
+
     // Shut down gracefully.
     eprintln!("shutting down server");
     Ok(())
@@ -48,10 +53,10 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
 /// Main loop of our WEBlsp server. Handles all incoming messages, and dispatches them to the appropriate language handler.
 fn main_loop(
     connection: Connection,
-    params: serde_json::Value,
+    init_params: serde_json::Value,
     mut css_language_service: csslsrs::service::LanguageService,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
-    let _params: InitializeParams = serde_json::from_value(params).unwrap();
+    let _init_params: InitializeParams = serde_json::from_value(init_params).unwrap();
     for msg in &connection.receiver {
         eprintln!("new msg: {msg:?}");
         match msg {
@@ -60,7 +65,7 @@ fn main_loop(
                 continue;
             }
             Message::Response(resp) => {
-                handle_response(resp)?;
+                response::handle_response(resp)?;
                 continue;
             }
             Message::Notification(not) => {
@@ -70,21 +75,4 @@ fn main_loop(
         }
     }
     Ok(())
-}
-
-/// TMP: log the response.
-fn handle_response(resp: lsp_server::Response) -> Result<(), Box<dyn Error + Sync + Send>> {
-    eprintln!("handle_response: got {resp:?}");
-    Ok(())
-}
-
-/// Attempts to cast a request to a specific LSP request type.
-/// If the request is not of the specified type, an error will be returned.
-/// If the request is of the specified type, the request ID and parameters will be returned.
-pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>
-where
-    R: lsp_types::request::Request,
-    R::Params: serde::de::DeserializeOwned,
-{
-    req.extract(R::METHOD)
 }

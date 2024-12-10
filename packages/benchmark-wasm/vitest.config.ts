@@ -5,4 +5,7 @@ const plugins = process.env.CODSPEED ? [codspeedPlugin()] : [];
 
 export default defineConfig({
 	plugins,
+	test: {
+		watch: false,
+	},
 });

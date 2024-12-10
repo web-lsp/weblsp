@@ -27,7 +27,9 @@ test:
 	echo "Running Rust tests..."
 	cargo test
 	echo "Running JS tests..."
-	pnpm -C ./packages/csslsrs run test
+	pnpm -C ./packages/csslsrs run test run
+	cargo build --package weblsp
+	pnpm -C ./packages/language-server-tests run test run
 
 benchmark:
 	echo "Running Native benchmarks..."

@@ -1,5 +1,4 @@
-import { describe, it } from "mocha";
-import { expect } from "chai";
+import { describe, it, expect, beforeAll } from "vitest";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { LanguageService } from "../../../csslsrs/dist/index";
 
@@ -7,7 +6,7 @@ describe("Hover", () => {
 	let ls: LanguageService;
 	let document: TextDocument;
 
-	before(() => {
+	beforeAll(() => {
 		ls = new LanguageService({
 			include_base_css_custom_data: true,
 		});

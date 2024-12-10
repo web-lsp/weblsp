@@ -1,4 +1,4 @@
-use lsp_server::Connection;
+use lsp_server::{Connection, ExtractError, Request, RequestId};
 use std::error::Error;
 use std::str::FromStr;
 
@@ -36,12 +36,10 @@ fn get_language_id(
         .get("textDocument")
         .and_then(|td| td.get("uri"))
         .and_then(|uri| uri.as_str())
+        .and_then(|uri| lsp_types::Uri::from_str(uri).ok())
         .ok_or("Missing or invalid 'textDocument.uri' in request parameters")?;
 
-    let text_document_uri = lsp_types::Uri::from_str(text_document_identifier)
-        .map_err(|_| "Invalid 'textDocument.uri' in request parameters")?;
-
-    let store_entry = match css_language_service.get_document(&text_document_uri) {
+    let store_entry = match css_language_service.get_document(&text_document_identifier) {
         Some(doc) => doc,
         None => return Err(Box::from("Document not found")),
     };
@@ -51,4 +49,15 @@ fn get_language_id(
 
     // The immutable borrow ends here
     Ok(language_id)
+}
+
+/// Attempts to cast a request to a specific LSP request type.
+/// If the request is not of the specified type, an error will be returned.
+/// If the request is of the specified type, the request ID and parameters will be returned.
+pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>
+where
+    R: lsp_types::request::Request,
+    R::Params: serde::de::DeserializeOwned,
+{
+    req.extract(R::METHOD)
 }

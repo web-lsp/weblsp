@@ -12,7 +12,7 @@
   "scripts": {
     "prepublishOnly": "just build-wasm release && pnpm run build",
     "build": "node ./build.js && tsc",
-    "test": "mocha --require tsx test/**/*.test.ts"
+    "test": "vitest"
   },
   "files": [
     "dist"
@@ -26,12 +26,8 @@
     "vscode-languageserver-types": "^3.17.5"
   },
   "devDependencies": {
-    "@types/chai": "^5.0.0",
-    "@types/mocha": "^10.0.9",
     "@types/node": "^22.8.0",
-    "chai": "^5.1.2",
-    "mocha": "^10.7.3",
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+		"vitest": "^2.1.8"
   }
 }

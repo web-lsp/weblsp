@@ -92,6 +92,9 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
+      - name: Install dependencies
+        run: just install
+
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
         with:

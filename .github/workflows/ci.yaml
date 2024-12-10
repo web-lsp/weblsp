@@ -92,14 +92,14 @@ jobs:
           node-version: 20
           cache: "pnpm"
 
-      - name: Install dependencies
-        run: just install
-
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
         with:
           targets: wasm32-unknown-unknown
           bins: wasm-bindgen-cli, just, wasm-opt
+
+      - name: Install dependencies
+        run: just install
 
       - name: Build
         run: just build

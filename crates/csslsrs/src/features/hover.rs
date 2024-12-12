@@ -82,7 +82,6 @@ fn get_css_hover_content(
         CssSyntaxKind::CSS_IDENTIFIER => {
             for data in css_data {
                 if let Some(property) = data
-                    .css
                     .properties
                     .entry
                     .iter()
@@ -105,7 +104,6 @@ fn get_css_hover_content(
         CssSyntaxKind::CSS_AT_RULE => {
             for data in css_data {
                 if let Some(at_directive) = data
-                    .css
                     .at_directives
                     .entry
                     .iter()

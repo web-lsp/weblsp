@@ -1,10 +1,14 @@
 use crate::{
-    converters::{line_index::LineIndex, to_proto::range, PositionEncoding},
+    converters::{
+        line_index::LineIndex,
+        to_proto::{position, range},
+        PositionEncoding,
+    },
     service::LanguageService,
 };
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
-use biome_rowan::{AstNode, SyntaxNode};
-use lsp_types::{DocumentSymbol, SymbolKind, TextDocumentItem};
+use biome_rowan::{AstNode, SyntaxNode, TextSize};
+use lsp_types::{DocumentSymbol, Range, SymbolKind, SymbolTag, TextDocumentItem};
 
 // Recursively extracts document symbols from the given CSS node.
 fn extract_document_symbols(
@@ -13,23 +17,55 @@ fn extract_document_symbols(
     encoding: PositionEncoding,
 ) -> Vec<DocumentSymbol> {
     let mut symbols = Vec::new();
-
     for child in node.children() {
-        let symbol = match child.kind() {
-            CssSyntaxKind::CSS_QUALIFIED_RULE => Some(create_symbol(
-                child.text().to_string().trim(),
-                SymbolKind::CLASS,
-                &child,
-                line_index,
-                encoding,
-            )),
-            CssSyntaxKind::CSS_AT_RULE => Some(create_symbol(
-                child.text().to_string().trim(),
-                SymbolKind::NAMESPACE,
-                &child,
-                line_index,
-                encoding,
-            )),
+        let symbol: Option<DocumentSymbol> = match child.kind() {
+            // Handle CSS at-rules, e.g. `@media`, `@keyframes`, etc.
+            CssSyntaxKind::CSS_AT_RULE => child.first_child().and_then(|at_rule| {
+                at_rule.first_token().map(|token| {
+                    create_symbol(
+                        String::from("@") + token.text_trimmed(),
+                        SymbolKind::NAMESPACE,
+                        range(line_index, child.text_range(), encoding).unwrap(),
+                        Range::new(
+                            position(
+                                line_index,
+                                token.text_range().start() - TextSize::from(1),
+                                encoding,
+                            )
+                            .unwrap(),
+                            position(line_index, token.text_range().end(), encoding).unwrap(),
+                        ),
+                        false,
+                    )
+                })
+            }),
+            // Handle CSS properties, e.g. `color`, `font-size`, etc.
+            CssSyntaxKind::CSS_GENERIC_PROPERTY => child
+                .children()
+                .find(|c| c.kind() == CssSyntaxKind::CSS_IDENTIFIER)
+                .and_then(|c| c.first_token())
+                .map(|token| {
+                    create_symbol(
+                        token.text_trimmed().to_string(),
+                        SymbolKind::PROPERTY,
+                        range(line_index, child.text_range(), encoding).unwrap(),
+                        range(line_index, token.text_range(), encoding).unwrap(),
+                        false,
+                    )
+                }),
+            // Handle CSS selectors, e.g. `.foo`, `#bar`, `div > span`, etc.
+            CssSyntaxKind::CSS_QUALIFIED_RULE => child
+                .children()
+                .find(|c| c.kind() == CssSyntaxKind::CSS_SELECTOR_LIST)
+                .map(|selector| {
+                    create_symbol(
+                        selector.text_trimmed().to_string(),
+                        SymbolKind::CLASS,
+                        range(line_index, child.text_range(), encoding).unwrap(),
+                        range(line_index, selector.text_range(), encoding).unwrap(),
+                        false,
+                    )
+                }),
             _ => None,
         };
 
@@ -51,24 +87,22 @@ fn extract_document_symbols(
 }
 
 fn create_symbol(
-    name: &str,
+    name: String,
     kind: SymbolKind,
-    node: &SyntaxNode<CssLanguage>,
-    line_index: &LineIndex,
-    encoding: PositionEncoding,
+    range: lsp_types::Range,
+    selection_range: lsp_types::Range,
+    is_deprecated: bool,
 ) -> DocumentSymbol {
-    let node_range = range(line_index, node.text_range(), encoding).unwrap();
-
     // TMP: deprecated is deprecated, but—for now—we still need to intialize it to None, and hide the warning.
     #[allow(deprecated)]
     DocumentSymbol {
-        name: name.to_string(),
+        name,
         detail: None,
         kind,
-        tags: None,
+        tags: is_deprecated.then(|| vec![SymbolTag::DEPRECATED]),
         deprecated: None,
-        range: node_range,
-        selection_range: node_range,
+        range,
+        selection_range,
         children: None,
     }
 }

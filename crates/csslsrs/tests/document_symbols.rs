@@ -16,6 +16,8 @@ fn assert_document_symbols(
         text: text.to_string(),
     };
 
+    ls.upsert_document(document.clone());
+
     let symbols = ls.get_document_symbols(document).unwrap_or_default();
 
     assert_eq!(
@@ -30,12 +32,50 @@ fn assert_document_symbols(
 }
 
 #[test]
-fn test_class_selector() {
+fn test_universal_selector() {
     let mut ls = LanguageService::default();
 
     assert_document_symbols(
         &mut ls,
-        ".foo { color: red; }",
+        "* {}",
+        vec![DocumentSymbol {
+            name: "*".to_string(),
+            detail: None,
+            kind: SymbolKind::CLASS,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 4,
+                },
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 2,
+                },
+            },
+            children: None,
+        }],
+    );
+}
+
+#[test]
+fn test_element_selector() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        ".foo {}",
         vec![DocumentSymbol {
             name: ".foo".to_string(),
             detail: None,
@@ -49,7 +89,7 @@ fn test_class_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 18,
+                    character: 7,
                 },
             },
             selection_range: Range {
@@ -59,7 +99,7 @@ fn test_class_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 4,
+                    character: 5,
                 },
             },
             children: None,
@@ -68,16 +108,16 @@ fn test_class_selector() {
 }
 
 #[test]
-fn test_id_selector() {
+fn test_compound_selector() {
     let mut ls = LanguageService::default();
 
     assert_document_symbols(
         &mut ls,
-        "#foo { color: blue; }",
+        "h1.foo {}",
         vec![DocumentSymbol {
-            name: "#foo".to_string(),
+            name: "h1.foo".to_string(),
             detail: None,
-            kind: SymbolKind::NAMESPACE,
+            kind: SymbolKind::CLASS,
             tags: None,
             deprecated: None,
             range: Range {
@@ -87,7 +127,7 @@ fn test_id_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 18,
+                    character: 9,
                 },
             },
             selection_range: Range {
@@ -97,7 +137,83 @@ fn test_id_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 4,
+                    character: 7,
+                },
+            },
+            children: None,
+        }],
+    );
+}
+
+#[test]
+fn test_descendant_selector() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        "main h1.foo {}",
+        vec![DocumentSymbol {
+            name: "main h1.foo".to_string(),
+            detail: None,
+            kind: SymbolKind::CLASS,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 14,
+                },
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 12,
+                },
+            },
+            children: None,
+        }],
+    );
+}
+
+#[test]
+fn test_complex_selector_in_list() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        "main > h1.foo, main#bar > button:hover {}",
+        vec![DocumentSymbol {
+            name: "main > h1.foo, main#bar > button:hover".to_string(),
+            detail: None,
+            kind: SymbolKind::CLASS,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 41,
+                },
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 39,
                 },
             },
             children: None,
@@ -111,7 +227,7 @@ fn test_nested_selectors() {
 
     assert_document_symbols(
         &mut ls,
-        ".foo { .bar { color: green; } }",
+        ".foo { .bar {} }",
         vec![DocumentSymbol {
             name: ".foo".to_string(),
             detail: None,
@@ -176,9 +292,9 @@ fn test_at_rule() {
 
     assert_document_symbols(
         &mut ls,
-        "@media screen { .foo { color: black; } }",
+        "@media (max-width: 768px) {}",
         vec![DocumentSymbol {
-            name: "@media screen".to_string(),
+            name: "@media".to_string(),
             detail: None,
             kind: SymbolKind::NAMESPACE,
             tags: None,
@@ -190,7 +306,7 @@ fn test_at_rule() {
                 },
                 end: Position {
                     line: 0,
-                    character: 38,
+                    character: 28,
                 },
             },
             selection_range: Range {
@@ -200,37 +316,105 @@ fn test_at_rule() {
                 },
                 end: Position {
                     line: 0,
-                    character: 13,
+                    character: 7,
                 },
             },
-            children: Some(vec![DocumentSymbol {
-                name: ".foo".to_string(),
-                detail: None,
-                kind: SymbolKind::CLASS,
-                tags: None,
-                deprecated: None,
-                range: Range {
-                    start: Position {
-                        line: 0,
-                        character: 15,
-                    },
-                    end: Position {
-                        line: 0,
-                        character: 36,
-                    },
+            children: None,
+        }],
+    );
+}
+
+#[test]
+fn test_selector_with_properties() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        ".foo { color: red; text-align: center; }",
+        vec![DocumentSymbol {
+            name: ".foo".to_string(),
+            detail: None,
+            kind: SymbolKind::CLASS,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
                 },
-                selection_range: Range {
-                    start: Position {
-                        line: 0,
-                        character: 15,
-                    },
-                    end: Position {
-                        line: 0,
-                        character: 19,
-                    },
+                end: Position {
+                    line: 0,
+                    character: 40,
                 },
-                children: None,
-            }]),
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 5,
+                },
+            },
+            children: Some(vec![
+                DocumentSymbol {
+                    name: "color".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 7,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 17,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 7,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 12,
+                        },
+                    },
+                    children: None,
+                },
+                DocumentSymbol {
+                    name: "text-align".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 19,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 37,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 19,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 29,
+                        },
+                    },
+                    children: None,
+                },
+            ]),
         }],
     );
 }

@@ -10,25 +10,15 @@ pub(crate) static BASE_CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| {
 
 // This is used when the user sets `include_base_css_custom_data` to false in the LanguageServiceOptions.
 pub(crate) static EMPTY_CSS_DATA: CssCustomData = CssCustomData {
-    css: CssSection {
-        at_directives: AtDirectives { entry: vec![] },
-        pseudo_classes: PseudoClasses { entry: vec![] },
-        pseudo_elements: PseudoElements { entry: vec![] },
-        properties: Properties { entry: vec![] },
-    },
+    at_directives: AtDirectives { entry: vec![] },
+    pseudo_classes: PseudoClasses { entry: vec![] },
+    pseudo_elements: PseudoElements { entry: vec![] },
+    properties: Properties { entry: vec![] },
 };
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-/// Represents any CSS data provided by the user or MDN.
-/// This is used to provide completions and hover information.
 pub struct CssCustomData {
-    pub css: CssSection,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CssSection {
     pub at_directives: AtDirectives,
     pub pseudo_classes: PseudoClasses,
     pub pseudo_elements: PseudoElements,

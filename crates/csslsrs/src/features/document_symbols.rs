@@ -79,16 +79,15 @@ impl LanguageService {
         &mut self,
         document: TextDocumentItem,
     ) -> Option<Vec<DocumentSymbol>> {
-        let store_entry = self.store.get_or_update_document(document);
-        let line_index = &store_entry.line_index;
-        let encoding = self.encoding;
+        let store_entry = self.store.get(&document.uri);
 
-        let symbols =
-            extract_document_symbols(store_entry.css_tree.tree().syntax(), line_index, encoding);
-        if symbols.is_empty() {
-            None
-        } else {
-            Some(symbols)
+        match store_entry {
+            Some(store_entry) => Some(extract_document_symbols(
+                store_entry.css_tree.tree().syntax(),
+                &store_entry.line_index,
+                self.options.encoding,
+            )),
+            None => None,
         }
     }
 }
@@ -97,7 +96,7 @@ impl LanguageService {
 mod wasm_bindings {
     use super::extract_document_symbols;
     use crate::{
-        converters::{line_index::LineIndex, PositionEncoding, WideEncoding},
+        converters::{line_index::LineIndex, PositionEncoding},
         parser::parse_css,
         wasm_text_document::create_text_document,
     };
@@ -114,7 +113,7 @@ mod wasm_bindings {
         let parsed_text_document = create_text_document(document);
         let css_parse = parse_css(&parsed_text_document.text);
         let line_index = LineIndex::new(&parsed_text_document.text);
-        let encoding = PositionEncoding::Wide(WideEncoding::Utf16);
+        let encoding = PositionEncoding::Utf16;
 
         let symbols = extract_document_symbols(css_parse.tree().syntax(), &line_index, encoding);
 

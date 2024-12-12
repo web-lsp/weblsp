@@ -30,6 +30,9 @@ jobs:
         with:
           bins: just
 
+      - name: Install dependencies
+        run: just install
+
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 

@@ -2,8 +2,10 @@ use serde::Deserialize;
 use std::sync::LazyLock;
 
 pub(crate) static BASE_CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../data/css-schema.json"))
-        .expect("Failed to parse css-schema.json")
+    serde_json::from_str(include_str!(
+        "../../../node_modules/@vscode/web-custom-data/data/browsers.css-data.json"
+    ))
+    .expect("Failed to parse css-schema.json")
 });
 
 // This is used when the user sets `include_base_css_custom_data` to false in the LanguageServiceOptions.

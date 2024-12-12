@@ -30,9 +30,6 @@ jobs:
         with:
           bins: just
 
-      - name: Download CSS custom data
-        run: just fetch-data
-
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 

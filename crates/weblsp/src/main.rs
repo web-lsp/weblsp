@@ -31,14 +31,14 @@ fn main() -> Result<ExitCode, Box<dyn Error + Sync + Send>> {
     // Init language services and start the main loop.
     let css_language_service = css::init_language_service();
 
-    // Run the server and wait for the two threads to end (typically by trigger LSP Exit event).
+    // Run the server and wait for the two threads to end (typically by shutdown then exit messages).
     let exit_code = main_loop(connection, initialization_params, css_language_service)?;
 
     // Joins the IO threads to ensure all communication is properly finished.
     io_threads.join()?;
 
     // Shut down gracefully.
-    eprintln!("shutting down server with exit code: {:?}", exit_code);
+    eprintln!("shutting down server");
 
     Ok(exit_code)
 }
@@ -53,6 +53,7 @@ fn main_loop(
     let _init_params: InitializeParams = serde_json::from_value(init_params).unwrap();
 
     for msg in &connection.receiver {
+        // TODO: Handle trace levels and notifications instead of just printing them to stderr.
         eprintln!("new msg: {:?}", msg);
 
         // If we're waiting for an exit notification, any message other than it is an error, and will cause the server to exit with a failure exit code.
@@ -67,6 +68,7 @@ fn main_loop(
             return Ok(ExitCode::FAILURE);
         }
 
+        // Handle the rest of the messages.
         match msg {
             Message::Request(req) => {
                 let request =

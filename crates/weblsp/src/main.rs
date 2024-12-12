@@ -1,13 +1,16 @@
-pub mod css;
-pub mod notifications;
-pub mod requests;
-use lsp_server::{Connection, ExtractError, Message, Request, RequestId};
-use lsp_types::{InitializeParams, ServerCapabilities, TextDocumentSyncCapability};
-use std::error::Error;
+mod css;
+mod notifications;
+mod requests;
+mod response;
+mod server;
+use lsp_server::{Connection, Message};
+use lsp_types::{notification::Notification, InitializeParams};
+use server::get_server_capabilities;
+use std::{error::Error, process::ExitCode};
 
 /// Entry point for our WEBlsp server.
 /// Heavily inspired by -> https://github.com/rust-lang/rust-analyzer/blob/master/lib/lsp-server/examples/goto_def.rs
-fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
+fn main() -> Result<ExitCode, Box<dyn Error + Sync + Send>> {
     // Note that we must have our logging only write out to stderr.
     eprintln!("starting server");
 
@@ -15,19 +18,8 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
     // also be implemented to use sockets or HTTP.
     let (connection, io_threads) = Connection::stdio();
 
-    // Run the server and wait for the two threads to end (typically by trigger LSP Exit event).
-    let server_capabilities = serde_json::to_value(&ServerCapabilities {
-        hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
-        color_provider: Some(lsp_types::ColorProviderCapability::Simple(true)),
-        folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
-        text_document_sync: Some(TextDocumentSyncCapability::Kind(
-            lsp_types::TextDocumentSyncKind::FULL,
-        )),
-        ..Default::default()
-    })
-    .unwrap();
-    let initialization_params = match connection.initialize(server_capabilities) {
-        Ok(it) => it,
+    let initialization_params = match connection.initialize(get_server_capabilities()) {
+        Ok(params) => params,
         Err(e) => {
             if e.channel_is_disconnected() {
                 io_threads.join()?;
@@ -35,56 +27,65 @@ fn main() -> Result<(), Box<dyn Error + Sync + Send>> {
             return Err(e.into());
         }
     };
+
     // Init language services and start the main loop.
     let css_language_service = css::init_language_service();
-    main_loop(connection, initialization_params, css_language_service)?;
+
+    // Run the server and wait for the two threads to end (typically by shutdown then exit messages).
+    let exit_code = main_loop(connection, initialization_params, css_language_service)?;
+
     // Joins the IO threads to ensure all communication is properly finished.
     io_threads.join()?;
+
     // Shut down gracefully.
     eprintln!("shutting down server");
-    Ok(())
+
+    Ok(exit_code)
 }
 
 /// Main loop of our WEBlsp server. Handles all incoming messages, and dispatches them to the appropriate language handler.
 fn main_loop(
     connection: Connection,
-    params: serde_json::Value,
+    init_params: serde_json::Value,
     mut css_language_service: csslsrs::service::LanguageService,
-) -> Result<(), Box<dyn Error + Sync + Send>> {
-    let _params: InitializeParams = serde_json::from_value(params).unwrap();
+) -> Result<ExitCode, Box<dyn Error + Sync + Send>> {
+    let mut awaiting_exit = false;
+    let _init_params: InitializeParams = serde_json::from_value(init_params).unwrap();
+
     for msg in &connection.receiver {
-        eprintln!("new msg: {msg:?}");
+        // TODO: Handle trace levels and notifications instead of just printing them to stderr.
+        eprintln!("new msg: {:?}", msg);
+
+        // If we're waiting for an exit notification, any message other than it is an error, and will cause the server to exit with a failure exit code.
+        // As such, we can handle this outside of the match statement.
+        if awaiting_exit {
+            if let Message::Notification(not) = &msg {
+                if not.method == lsp_types::notification::Exit::METHOD {
+                    return Ok(ExitCode::SUCCESS);
+                }
+            }
+            eprintln!("Shutting down without receiving `Exit` notification.");
+            return Ok(ExitCode::FAILURE);
+        }
+
+        // Handle the rest of the messages.
         match msg {
             Message::Request(req) => {
-                requests::handle_request(req, &mut css_language_service, &connection)?;
-                continue;
+                let request =
+                    requests::handle_request(req, &mut css_language_service, &connection)?;
+
+                if request.is_shutdown {
+                    awaiting_exit = true;
+                }
             }
             Message::Response(resp) => {
-                handle_response(resp)?;
-                continue;
+                response::handle_response(resp)?;
             }
             Message::Notification(not) => {
                 notifications::handle_notification(not, &mut css_language_service, &connection)?;
-                continue;
             }
         }
     }
-    Ok(())
-}
 
-/// TMP: log the response.
-fn handle_response(resp: lsp_server::Response) -> Result<(), Box<dyn Error + Sync + Send>> {
-    eprintln!("handle_response: got {resp:?}");
-    Ok(())
-}
-
-/// Attempts to cast a request to a specific LSP request type.
-/// If the request is not of the specified type, an error will be returned.
-/// If the request is of the specified type, the request ID and parameters will be returned.
-pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>
-where
-    R: lsp_types::request::Request,
-    R::Params: serde::de::DeserializeOwned,
-{
-    req.extract(R::METHOD)
+    Ok(ExitCode::SUCCESS)
 }

@@ -1,8 +1,14 @@
-use lsp_server::Connection;
+use lsp_server::{Connection, ExtractError, Request, RequestId};
+use lsp_types::request::Request as _;
 use std::error::Error;
 use std::str::FromStr;
 
 use crate::css;
+
+#[derive(Default)]
+pub struct RequestOutcome {
+    pub(crate) is_shutdown: bool,
+}
 
 /// Used by the main loop. Based on the document's language, this function will dispatch the request to the appropriate language handler.
 /// Requests are LSP features that the client wants to use, and the server must respond to each request.
@@ -10,7 +16,18 @@ pub fn handle_request(
     req: lsp_server::Request,
     css_language_service: &mut csslsrs::service::LanguageService,
     connection: &Connection,
-) -> Result<(), Box<dyn Error + Sync + Send>> {
+) -> Result<RequestOutcome, Box<dyn Error + Sync + Send>> {
+    if req.method == lsp_types::request::Shutdown::METHOD {
+        connection
+            .sender
+            .send(lsp_server::Message::Response(lsp_server::Response::new_ok(
+                req.id,
+                (),
+            )))?;
+
+        return Ok(RequestOutcome { is_shutdown: true });
+    }
+
     let language_id = get_language_id(&req, css_language_service)?;
     match language_id.as_str() {
         "css" => {
@@ -20,7 +37,8 @@ pub fn handle_request(
             eprintln!("unsupported language: {}", language_id);
         }
     }
-    Ok(())
+
+    Ok(RequestOutcome::default())
 }
 
 // TMP: TODO: For now, we use CSSlsrs' store, because we only support CSS. So I can just retrieve the document from this store from its URI.
@@ -36,12 +54,10 @@ fn get_language_id(
         .get("textDocument")
         .and_then(|td| td.get("uri"))
         .and_then(|uri| uri.as_str())
+        .and_then(|uri| lsp_types::Uri::from_str(uri).ok())
         .ok_or("Missing or invalid 'textDocument.uri' in request parameters")?;
 
-    let text_document_uri = lsp_types::Uri::from_str(text_document_identifier)
-        .map_err(|_| "Invalid 'textDocument.uri' in request parameters")?;
-
-    let store_entry = match css_language_service.get_document(&text_document_uri) {
+    let store_entry = match css_language_service.get_document(&text_document_identifier) {
         Some(doc) => doc,
         None => return Err(Box::from("Document not found")),
     };
@@ -51,4 +67,15 @@ fn get_language_id(
 
     // The immutable borrow ends here
     Ok(language_id)
+}
+
+/// Attempts to cast a request to a specific LSP request type.
+/// If the request is not of the specified type, an error will be returned.
+/// If the request is of the specified type, the request ID and parameters will be returned.
+pub fn cast<R>(req: Request) -> Result<(RequestId, R::Params), ExtractError<Request>>
+where
+    R: lsp_types::request::Request,
+    R::Params: serde::de::DeserializeOwned,
+{
+    req.extract(R::METHOD)
 }

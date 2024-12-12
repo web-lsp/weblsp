@@ -5,4 +5,11 @@ const plugins = process.env.CODSPEED ? [codspeedPlugin()] : [];
 
 export default defineConfig({
 	plugins,
+	test: {
+		forceRerunTriggers: [
+			"**/package.json/**",
+			"**/{vitest,vite}.config.*/**",
+			"**/csslsrs_bg.wasm",
+		],
+	},
 });

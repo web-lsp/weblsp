@@ -1,5 +1,4 @@
-import { describe, it } from "mocha";
-import { expect } from "chai";
+import { describe, it, expect } from "vitest";
 import { LanguageService } from "../../dist/index.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import type { FoldingRange } from "vscode-languageserver-types";

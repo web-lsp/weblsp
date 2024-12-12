@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+// TMP: deprecated is deprecated in Document Symbol, but we still need to intialize it to None, and hide the warning.
 use csslsrs::service::LanguageService;
 use lsp_types::{DocumentSymbol, Position, Range, SymbolKind, TextDocumentItem, Uri};
 use std::str::FromStr;

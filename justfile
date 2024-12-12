@@ -33,8 +33,7 @@ test:
 	echo "Running Rust tests..."
 	cargo test
 	echo "Running JS tests..."
-	pnpm -C ./packages/csslsrs run test --run
-	pnpm -C ./packages/language-server-tests run test --run
+	pnpm -r run test --run
 
 benchmark:
 	echo "Running Native benchmarks..."

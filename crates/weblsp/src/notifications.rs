@@ -1,6 +1,6 @@
 use lsp_server::Connection;
 use lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams, TextDocumentItem};
-use std::error::Error;
+use std::{error::Error, process::exit};
 
 /// Used by the main loop to handle notifications. Notifications are messages that the client sends to the server.
 /// Notable notifications include `exit`, `textDocument/didOpen`, and `textDocument/didChange`.
@@ -10,9 +10,10 @@ pub fn handle_notification(
     _connection: &Connection,
 ) -> Result<(), Box<dyn Error + Sync + Send>> {
     match notification.method.as_str() {
+        // Proper shutdown is handled directly by the main loop, so if we get an `exit` notification here, it's an invalid one and we should exit with an error.
         "exit" => {
-            eprintln!("exit: shutting down server");
-            std::process::exit(0);
+            eprintln!("Shutting down without receiving `Shutdown` request.");
+            exit(1);
         }
         "textDocument/didOpen" => {
             // didOpen notification carry a textDocument item, which contains the document's URI and languageId.

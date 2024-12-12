@@ -22,15 +22,11 @@ export type LanguageServerHandle = ReturnType<typeof startLanguageServer>;
 
 export async function startLanguageServer(cwd?: string | undefined) {
 	console.info(`Starting language server at ${pathToBinary}`);
-	const childProcess = cp.spawn(
-		pathToBinary,
-		["--stdio", `--clientProcessId=${process.pid.toString()}`],
-		{
-			env: process.env,
-			cwd,
-			stdio: "pipe",
-		}
-	);
+	const childProcess = cp.spawn(pathToBinary, [], {
+		env: process.env,
+		cwd,
+		stdio: "pipe",
+	});
 
 	if (!childProcess.stdout || !childProcess.stdin) {
 		throw new Error("Bad stdio configuration, should be pipe");
@@ -161,6 +157,9 @@ export async function startLanguageServer(cwd?: string | undefined) {
 			running = false;
 			await connection.sendRequest(_.ShutdownRequest.type);
 			openedDocuments.clear();
+		},
+		async exit() {
+			await connection.sendNotification(_.ExitNotification.type);
 		},
 		async openTextDocument(fileName: string, languageId: string) {
 			const uri = URI.file(fileName).toString();

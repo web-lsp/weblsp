@@ -1,11 +1,10 @@
-import { LanguageService } from "../../csslsrs/dist/index.js";
+import { LanguageService } from "csslsrs";
 import { getCSSLanguageService } from "vscode-css-languageservice";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { bench, describe } from "vitest";
 
-describe("Hover", async () => {
-	const vscodeLanguageService = getCSSLanguageService();
-	const content = `
+const vscodeLanguageService = getCSSLanguageService();
+const content = `
 body {
   background-color: #fff;
 }
@@ -23,17 +22,13 @@ h1 > span {
 }
 `;
 
-	const textDocument = TextDocument.create(
-		"file:///test.css",
-		"css",
-		0,
-		content
-	);
-	const ls = new LanguageService({
-		include_base_css_custom_data: true,
-	});
-	ls.upsertDocument(textDocument);
+const textDocument = TextDocument.create("file:///test.css", "css", 0, content);
+const ls = new LanguageService({
+	include_base_css_custom_data: true,
+});
+ls.upsertDocument(textDocument);
 
+describe("Hover", async () => {
 	bench("CSSLSRS(WASM) - Hover", () => {
 		ls.getHover(textDocument.uri, {
 			line: 14,

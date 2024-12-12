@@ -30,6 +30,15 @@ jobs:
         with:
           bins: just
 
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
       - name: Install dependencies
         run: just install
 
@@ -43,10 +52,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
         with:
           bins: just
+
+      - name: Install dependencies
+        run: just install
 
       - name: Build
         run: just build

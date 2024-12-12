@@ -1,5 +1,5 @@
 target
-packages/csslsrs/dist
+**/dist
 node_modules
 **/generated/*
 !**/generated/README.md

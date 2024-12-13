@@ -34,7 +34,7 @@ pub struct PropertyEntry {
     pub status: Option<Status>,
     pub browsers: Option<Vec<String>>,
     pub references: Option<Vec<Reference>>,
-    pub relevance: Option<f64>,
+    pub relevance: Option<u8>,
 
     // Not in the JSON schema, but found in VS Code's types and CSS data, strange.
     #[serde(rename = "atRule")]
@@ -95,7 +95,7 @@ pub enum MarkupDescriptionOrString {
 
 #[derive(Debug, Deserialize)]
 pub struct MarkupDescription {
-    pub kind: String, // ["plaintext", "markdown"]
+    pub kind: MarkupDescriptionKind,
     pub value: String,
 }
 
@@ -106,4 +106,11 @@ pub enum Status {
     Experimental,
     Nonstandard,
     Obsolete,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MarkupDescriptionKind {
+    Plaintext,
+    Markdown,
 }

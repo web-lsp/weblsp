@@ -63,13 +63,12 @@ fn test_hover_over_color_property_inline() {
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `body { $(name): red; }`\n\n**Restriction**: color\n\n**Supported Browsers**:\n- all\n\n**Reference**:\n- [color](http://www.w3.org/TR/css3-color/#foreground)\n\n".to_string(),
+            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `<color>`\n\n**Restriction**:\n- color\n**Supported Browsers**:\n- E12\n- FF1\n- S1\n- C1\n- IE3\n- O3.5\n\n**Reference**:\n- [MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color)\n\n".to_owned()
         }),
         range: Some(Range {
             start: Position { line: 0, character: 8 },
-            end: Position { line: 0, character: 13 },
-        }),
-    };
+            end: Position { line: 0, character: 13 }
+        }) };
 
     assert_hover(css_text, expected_hover);
 }
@@ -80,13 +79,12 @@ fn test_hover_over_color_property() {
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `body { $(name): red; }`\n\n**Restriction**: color\n\n**Supported Browsers**:\n- all\n\n**Reference**:\n- [color](http://www.w3.org/TR/css3-color/#foreground)\n\n".to_string(),
+            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `<color>`\n\n**Restriction**:\n- color\n**Supported Browsers**:\n- E12\n- FF1\n- S1\n- C1\n- IE3\n- O3.5\n\n**Reference**:\n- [MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color)\n\n".to_owned()
         }),
         range: Some(Range {
             start: Position { line: 1, character: 2 },
-            end: Position { line: 1, character: 7 },
-        }),
-    };
+            end: Position { line: 1, character: 7 }
+        }) };
 
     assert_hover(css_text, expected_hover);
 }

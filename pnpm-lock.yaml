@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@vscode/web-custom-data':
+        specifier: ^0.4.13
+        version: 0.4.13
 
   packages/benchmark-wasm:
     dependencies:
@@ -368,6 +372,9 @@ packages:
 
   '@vscode/l10n@0.0.18':
     resolution: {integrity: sha512-KYSIHVmslkaCDyw013pphY+d7x1qV8IZupYfeIfzNA+nsaWHbn5uPuQRvdRFsa9zFzGeudPuoGoZ1Op4jrJXIQ==}
+
+  '@vscode/web-custom-data@0.4.13':
+    resolution: {integrity: sha512-2ZUIRfhofZ/npLlf872EBnPmn27Kt4M2UssmQIfnJvgGgMYZJ5fvtHEDnttBBf2hnVtBgNCqZMVHJA+wsFVqTA==}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -868,6 +875,8 @@ snapshots:
       tinyrainbow: 1.2.0
 
   '@vscode/l10n@0.0.18': {}
+
+  '@vscode/web-custom-data@0.4.13': {}
 
   assertion-error@2.0.1: {}
 

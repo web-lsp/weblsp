@@ -2,122 +2,115 @@ use serde::Deserialize;
 use std::sync::LazyLock;
 
 pub(crate) static BASE_CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../data/css-schema.json"))
-        .expect("Failed to parse css-schema.json")
+    serde_json::from_str(include_str!(
+        "../../../node_modules/@vscode/web-custom-data/data/browsers.css-data.json"
+    ))
+    .expect("Failed to parse css-schema.json")
 });
 
 // This is used when the user sets `include_base_css_custom_data` to false in the LanguageServiceOptions.
 pub(crate) static EMPTY_CSS_DATA: CssCustomData = CssCustomData {
-    css: CssSection {
-        at_directives: AtDirectives { entry: vec![] },
-        pseudo_classes: PseudoClasses { entry: vec![] },
-        pseudo_elements: PseudoElements { entry: vec![] },
-        properties: Properties { entry: vec![] },
-    },
+    version: 1.1,
+    at_directives: None,
+    pseudo_classes: None,
+    pseudo_elements: None,
+    properties: None,
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-/// Represents any CSS data provided by the user or MDN.
-/// This is used to provide completions and hover information.
 pub struct CssCustomData {
-    pub css: CssSection,
+    pub version: f64,
+    pub properties: Option<Vec<PropertyEntry>>,
+    pub at_directives: Option<Vec<AtDirectiveEntry>>,
+    pub pseudo_classes: Option<Vec<PseudoClassEntry>>,
+    pub pseudo_elements: Option<Vec<PseudoElementEntry>>,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CssSection {
-    pub at_directives: AtDirectives,
-    pub pseudo_classes: PseudoClasses,
-    pub pseudo_elements: PseudoElements,
-    pub properties: Properties,
-}
-
-#[derive(Deserialize)]
-pub struct AtDirectives {
-    pub entry: Vec<AtDirectiveEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoClasses {
-    pub entry: Vec<PseudoClassEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoElements {
-    pub entry: Vec<PseudoElementEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct Properties {
-    pub entry: Vec<PropertyEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct AtDirectiveEntry {
-    #[serde(rename = "$")]
-    pub attributes: AtDirectiveAttributes,
-    pub desc: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoClassEntry {
-    #[serde(rename = "$")]
-    pub attributes: PseudoClassAttributes,
-    pub desc: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoElementEntry {
-    #[serde(rename = "$")]
-    pub attributes: PseudoElementAttributes,
-    pub desc: Option<String>,
-}
-
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PropertyEntry {
-    #[serde(rename = "$")]
-    pub attributes: PropertyAttributes,
-    pub desc: Option<String>,
+    pub name: String,
+    pub description: Option<MarkupDescriptionOrString>,
+    pub status: Option<Status>,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
+    pub relevance: Option<u8>,
+
+    // Not in the JSON schema, but found in VS Code's types and CSS data, strange.
+    #[serde(rename = "atRule")]
+    pub at_rule: Option<String>,
+    pub syntax: Option<String>,
+    pub restrictions: Option<Vec<String>>,
+    pub values: Option<Vec<Value>>,
 }
 
-#[derive(Deserialize)]
-pub struct AtDirectiveAttributes {
+#[derive(Debug, Deserialize)]
+pub struct Value {
     pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+    pub description: Option<MarkupDescriptionOrString>,
+    pub browsers: Option<Vec<String>>,
+    pub status: Option<Status>,
+    pub references: Option<Vec<Reference>>,
 }
 
-#[derive(Deserialize)]
-pub struct PseudoClassAttributes {
+#[derive(Debug, Deserialize)]
+pub struct AtDirectiveEntry {
     pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+    pub description: Option<MarkupDescriptionOrString>,
+    pub status: Option<Status>,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
 }
 
-#[derive(Deserialize)]
-pub struct PseudoElementAttributes {
+#[derive(Debug, Deserialize)]
+pub struct PseudoClassEntry {
     pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+    pub description: Option<MarkupDescriptionOrString>,
+    pub status: Option<Status>,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
 }
 
-#[derive(Deserialize)]
-pub struct PropertyAttributes {
+#[derive(Debug, Deserialize)]
+pub struct PseudoElementEntry {
     pub name: String,
-    pub restriction: Option<String>,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+    pub description: Option<MarkupDescriptionOrString>,
+    pub status: Option<Status>,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Reference {
+    pub name: String,
+    pub url: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum MarkupDescriptionOrString {
+    MarkupDescription(MarkupDescription),
+    String(String),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MarkupDescription {
+    pub kind: MarkupDescriptionKind,
+    pub value: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Status {
+    Standard,
+    Experimental,
+    Nonstandard,
+    Obsolete,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MarkupDescriptionKind {
+    Plaintext,
+    Markdown,
 }

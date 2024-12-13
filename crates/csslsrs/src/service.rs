@@ -80,29 +80,29 @@ impl LanguageService {
     /// use csslsrs::service::{LanguageService, LanguageServiceOptions};
     /// use csslsrs::css_data::CssCustomData;
     /// use csslsrs::converters::PositionEncoding;
-    /// use csslsrs::css_data::{CssSection, AtDirectives, PseudoClasses, PseudoElements, Properties, PropertyEntry, PropertyAttributes};
+    /// use csslsrs::css_data::{PropertyEntry};
     ///
     /// let mut language_service = LanguageService::new(LanguageServiceOptions::default());
     ///
     /// let custom_data = CssCustomData {
-    ///     css: CssSection {
-    ///         at_directives: AtDirectives { entry: vec![] },
-    ///         pseudo_classes: PseudoClasses { entry: vec![] },
-    ///         pseudo_elements: PseudoElements { entry: vec![] },
-    ///         properties: Properties { entry: vec![
+    ///         version: 1.1,
+    ///         at_directives: None,
+    ///         pseudo_classes: None,
+    ///         pseudo_elements: None,
+    ///         properties: Some(vec![
     ///             PropertyEntry {
-    ///                 attributes: PropertyAttributes {
-    ///                     name: "my-custom-property".to_string(),
-    ///                     restriction: None,
-    ///                     version: None,
-    ///                     browsers: None,
-    ///                     ref_: None,
-    ///                     syntax: None,
-    ///                 },
-    ///                 desc: None,
+    ///                 name: "my-custom-property".to_string(),
+    ///                 restrictions: None,
+    ///                 browsers: None,
+    ///                 references: None,
+    ///                 at_rule: None,
+    ///                 relevance: None,
+    ///                 syntax: None,
+    ///                 description: None,
+    ///                 status: None,
+    ///                 values: None,
     ///             }
-    ///         ] }
-    ///     }
+    ///         ])
     /// };
     ///
     /// language_service.add_css_custom_data(custom_data);

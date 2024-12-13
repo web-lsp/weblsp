@@ -1,4 +1,4 @@
-use crate::css_data::{CssCustomData, Reference};
+use crate::css_data::{CssCustomData, MarkupDescriptionOrString, Reference};
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, TextDocumentItem};
@@ -81,10 +81,16 @@ fn get_css_hover_content(
     match kind {
         CssSyntaxKind::CSS_IDENTIFIER => {
             for data in css_data {
-                if let Some(property) = data.properties.iter().find(|prop| prop.name == name) {
+                if let Some(property) = data
+                    .properties
+                    .as_ref()
+                    .iter()
+                    .flat_map(|props| props.iter())
+                    .find(|prop| prop.name == name)
+                {
                     return Some(format_css_entry(
                         &property.name,
-                        property.description.as_deref(),
+                        &property.description,
                         property.syntax.as_deref(),
                         None,
                         property.browsers.as_deref(),
@@ -98,10 +104,16 @@ fn get_css_hover_content(
         // Handle at-rules like @media, @supports, etc.
         CssSyntaxKind::CSS_AT_RULE => {
             for data in css_data {
-                if let Some(at_directive) = data.at_directives.iter().find(|ad| ad.name == name) {
+                if let Some(at_directive) = data
+                    .at_directives
+                    .as_ref()
+                    .iter()
+                    .flat_map(|ats| ats.iter())
+                    .find(|at| at.name == name)
+                {
                     return Some(format_css_entry(
                         &at_directive.name,
-                        at_directive.description.as_deref(),
+                        &at_directive.description,
                         None,
                         None,
                         at_directive.browsers.as_deref(),
@@ -116,7 +128,7 @@ fn get_css_hover_content(
         | CssSyntaxKind::CSS_COMPLEX_SELECTOR
         | CssSyntaxKind::CSS_COMPOUND_SELECTOR => Some(format_css_entry(
             name,
-            None,
+            &None,
             None,
             Some(calculate_specificity(name)),
             None,
@@ -130,7 +142,7 @@ fn get_css_hover_content(
 /// Formats the CSS entry into a hover content string.
 fn format_css_entry(
     name: &str,
-    description: Option<&str>,
+    description: &Option<MarkupDescriptionOrString>,
     syntax: Option<&str>,
     specificity: Option<(u32, u32, u32)>,
     browsers: Option<&[String]>,
@@ -142,7 +154,14 @@ fn format_css_entry(
 
     // Add the description if available
     if let Some(description) = description {
-        content.push_str(description);
+        match description {
+            MarkupDescriptionOrString::MarkupDescription(markup_description) => {
+                content.push_str(&markup_description.value);
+            }
+            MarkupDescriptionOrString::String(description) => {
+                content.push_str(description);
+            }
+        }
         content.push_str("\n\n");
     }
 

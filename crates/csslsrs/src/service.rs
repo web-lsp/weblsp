@@ -85,10 +85,11 @@ impl LanguageService {
     /// let mut language_service = LanguageService::new(LanguageServiceOptions::default());
     ///
     /// let custom_data = CssCustomData {
-    ///         at_directives: vec![],
-    ///         pseudo_classes: vec![],
-    ///         pseudo_elements: vec![],
-    ///         properties: vec![
+    ///         version: 1.1,
+    ///         at_directives: None,
+    ///         pseudo_classes: None,
+    ///         pseudo_elements: None,
+    ///         properties: Some(vec![
     ///             PropertyEntry {
     ///                 name: "my-custom-property".to_string(),
     ///                 restrictions: None,
@@ -98,8 +99,10 @@ impl LanguageService {
     ///                 relevance: None,
     ///                 syntax: None,
     ///                 description: None,
+    ///                 status: None,
+    ///                 values: None,
     ///             }
-    ///         ]
+    ///         ])
     /// };
     ///
     /// language_service.add_css_custom_data(custom_data);

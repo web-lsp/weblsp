@@ -10,106 +10,60 @@ pub(crate) static BASE_CSS_DATA: LazyLock<CssCustomData> = LazyLock::new(|| {
 
 // This is used when the user sets `include_base_css_custom_data` to false in the LanguageServiceOptions.
 pub(crate) static EMPTY_CSS_DATA: CssCustomData = CssCustomData {
-    at_directives: AtDirectives { entry: vec![] },
-    pseudo_classes: PseudoClasses { entry: vec![] },
-    pseudo_elements: PseudoElements { entry: vec![] },
-    properties: Properties { entry: vec![] },
+    at_directives: vec![],
+    pseudo_classes: vec![],
+    pseudo_elements: vec![],
+    properties: vec![],
 };
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CssCustomData {
-    pub at_directives: AtDirectives,
-    pub pseudo_classes: PseudoClasses,
-    pub pseudo_elements: PseudoElements,
-    pub properties: Properties,
+    pub at_directives: Vec<AtDirectiveEntry>,
+    pub pseudo_classes: Vec<PseudoClassEntry>,
+    pub pseudo_elements: Vec<PseudoElementEntry>,
+    pub properties: Vec<PropertyEntry>,
 }
 
 #[derive(Deserialize)]
-pub struct AtDirectives {
-    pub entry: Vec<AtDirectiveEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoClasses {
-    pub entry: Vec<PseudoClassEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoElements {
-    pub entry: Vec<PseudoElementEntry>,
-}
-
-#[derive(Deserialize)]
-pub struct Properties {
-    pub entry: Vec<PropertyEntry>,
+pub struct Reference {
+    pub name: String,
+    pub url: String,
 }
 
 #[derive(Deserialize)]
 pub struct AtDirectiveEntry {
-    #[serde(rename = "$")]
-    pub attributes: AtDirectiveAttributes,
-    pub desc: Option<String>,
+    pub name: String,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
+    pub description: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct PseudoClassEntry {
-    #[serde(rename = "$")]
-    pub attributes: PseudoClassAttributes,
-    pub desc: Option<String>,
+    pub name: String,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
+    pub description: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct PseudoElementEntry {
-    #[serde(rename = "$")]
-    pub attributes: PseudoElementAttributes,
-    pub desc: Option<String>,
+    pub name: String,
+    pub browsers: Option<Vec<String>>,
+    pub references: Option<Vec<Reference>>,
+    pub description: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct PropertyEntry {
-    #[serde(rename = "$")]
-    pub attributes: PropertyAttributes,
-    pub desc: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct AtDirectiveAttributes {
     pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
+    pub browsers: Option<Vec<String>>,
+    #[serde(rename = "atRule")]
+    pub at_rule: Option<String>,
+    pub references: Option<Vec<Reference>>,
     pub syntax: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoClassAttributes {
-    pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PseudoElementAttributes {
-    pub name: String,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct PropertyAttributes {
-    pub name: String,
-    pub restriction: Option<String>,
-    pub version: Option<String>,
-    pub browsers: Option<String>,
-    #[serde(rename = "ref")]
-    pub ref_: Option<String>,
-    pub syntax: Option<String>,
+    pub relevance: Option<f64>,
+    pub description: Option<String>,
+    pub restrictions: Option<Vec<String>>,
 }

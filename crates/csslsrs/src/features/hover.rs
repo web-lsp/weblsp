@@ -1,4 +1,4 @@
-use crate::css_data::CssCustomData;
+use crate::css_data::{CssCustomData, Reference};
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, TextDocumentItem};
@@ -81,20 +81,15 @@ fn get_css_hover_content(
     match kind {
         CssSyntaxKind::CSS_IDENTIFIER => {
             for data in css_data {
-                if let Some(property) = data
-                    .properties
-                    .entry
-                    .iter()
-                    .find(|prop| prop.attributes.name == name)
-                {
+                if let Some(property) = data.properties.iter().find(|prop| prop.name == name) {
                     return Some(format_css_entry(
-                        &property.attributes.name,
-                        property.desc.as_deref(),
-                        property.attributes.syntax.as_deref(),
+                        &property.name,
+                        property.description.as_deref(),
+                        property.syntax.as_deref(),
                         None,
-                        property.attributes.browsers.as_deref(),
-                        property.attributes.ref_.as_deref(),
-                        property.attributes.restriction.as_deref(),
+                        property.browsers.as_deref(),
+                        property.references.as_deref(),
+                        property.restrictions.as_deref(),
                     ));
                 }
             }
@@ -103,19 +98,14 @@ fn get_css_hover_content(
         // Handle at-rules like @media, @supports, etc.
         CssSyntaxKind::CSS_AT_RULE => {
             for data in css_data {
-                if let Some(at_directive) = data
-                    .at_directives
-                    .entry
-                    .iter()
-                    .find(|ad| ad.attributes.name == name)
-                {
+                if let Some(at_directive) = data.at_directives.iter().find(|ad| ad.name == name) {
                     return Some(format_css_entry(
-                        &at_directive.attributes.name,
-                        at_directive.desc.as_deref(),
-                        at_directive.attributes.syntax.as_deref(),
+                        &at_directive.name,
+                        at_directive.description.as_deref(),
                         None,
-                        at_directive.attributes.browsers.as_deref(),
-                        at_directive.attributes.ref_.as_deref(),
+                        None,
+                        at_directive.browsers.as_deref(),
+                        at_directive.references.as_deref(),
                         None,
                     ));
                 }
@@ -140,18 +130,18 @@ fn get_css_hover_content(
 /// Formats the CSS entry into a hover content string.
 fn format_css_entry(
     name: &str,
-    desc: Option<&str>,
+    description: Option<&str>,
     syntax: Option<&str>,
     specificity: Option<(u32, u32, u32)>,
-    browsers: Option<&str>,
-    reference: Option<&str>,
-    restriction: Option<&str>,
+    browsers: Option<&[String]>,
+    references: Option<&[Reference]>,
+    restrictions: Option<&[String]>,
 ) -> String {
     let mut content = String::new();
     content.push_str(&format!("**{}**\n\n", escape_markdown(name)));
 
     // Add the description if available
-    if let Some(description) = desc {
+    if let Some(description) = description {
         content.push_str(description);
         content.push_str("\n\n");
     }
@@ -170,23 +160,29 @@ fn format_css_entry(
     }
 
     // Add restriction if available
-    if let Some(info) = restriction {
-        content.push_str(&format!("**Restriction**: {}\n\n", info));
+    if let Some(restriction) = restrictions {
+        content.push_str("**Restriction**:\n");
+        for restriction in restriction {
+            content.push_str(&format!("- {}\n", restriction.trim()));
+        }
     }
 
     // Add browsers if available
     if let Some(browsers) = browsers {
         content.push_str("**Supported Browsers**:\n");
-        for browser in browsers.split(',') {
+        for browser in browsers {
             content.push_str(&format!("- {}\n", browser.trim()));
         }
         content.push('\n');
     }
 
     // Add reference if available
-    if let Some(reference) = reference {
+    if let Some(references) = references {
         content.push_str("**Reference**:\n");
-        content.push_str(&format!("- [{}]({})\n\n", name, reference));
+
+        for reference in references {
+            content.push_str(&format!("- [{}]({})\n\n", reference.name, reference.url));
+        }
     }
 
     content

@@ -180,27 +180,26 @@ fn format_css_entry(
 
     // Add restriction if available
     if let Some(restriction) = restrictions {
-        content.push_str("**Restriction**:\n");
+        content.push_str("**Restriction**: ");
         for restriction in restriction {
-            content.push_str(&format!("- {}\n", restriction.trim()));
+            content.push_str(&format!("{}, ", restriction.trim()));
         }
+        content.push_str("\n\n");
     }
 
     // Add browsers if available
     if let Some(browsers) = browsers {
-        content.push_str("**Supported Browsers**:\n");
+        content.push_str("**Supported Browsers**: ");
         for browser in browsers {
-            content.push_str(&format!("- {}\n", browser.trim()));
+            content.push_str(&format!("{}, ", browser.trim()));
         }
-        content.push('\n');
+        content.push_str("\n\n");
     }
 
     // Add reference if available
     if let Some(references) = references {
-        content.push_str("**Reference**:\n");
-
         for reference in references {
-            content.push_str(&format!("- [{}]({})\n\n", reference.name, reference.url));
+            content.push_str(&format!("[{}]({})\n\n", reference.name, reference.url));
         }
     }
 

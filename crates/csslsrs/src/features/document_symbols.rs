@@ -4,6 +4,7 @@ use crate::{
         to_proto::{position, range},
         PositionEncoding,
     },
+    css_data::CssCustomData,
     service::LanguageService,
 };
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
@@ -15,6 +16,7 @@ fn extract_document_symbols(
     node: &SyntaxNode<CssLanguage>,
     line_index: &LineIndex,
     encoding: PositionEncoding,
+    _custom_data: &Vec<&CssCustomData>,
 ) -> Vec<DocumentSymbol> {
     let mut symbols = Vec::new();
     for child in node.children() {
@@ -75,14 +77,16 @@ fn extract_document_symbols(
 
         // If we have a symbol, search for nested children symbols.
         if let Some(mut sym) = symbol {
-            let children_symbols = extract_document_symbols(&child, line_index, encoding);
+            let children_symbols =
+                extract_document_symbols(&child, line_index, encoding, _custom_data);
             if !children_symbols.is_empty() {
                 sym.children = Some(children_symbols);
             }
             symbols.push(sym);
         } else {
             // Even if we don't have a symbol, we still want to search for nested symbols.
-            let nested_symbols = extract_document_symbols(&child, line_index, encoding);
+            let nested_symbols =
+                extract_document_symbols(&child, line_index, encoding, _custom_data);
             symbols.extend(nested_symbols);
         }
     }
@@ -124,6 +128,7 @@ impl LanguageService {
                 store_entry.css_tree.tree().syntax(),
                 &store_entry.line_index,
                 self.options.encoding,
+                &self.get_css_custom_data(),
             )),
             None => None,
         }
@@ -132,32 +137,35 @@ impl LanguageService {
 
 #[cfg(feature = "wasm")]
 mod wasm_bindings {
+    use std::str::FromStr;
+
     use super::extract_document_symbols;
-    use crate::{
-        converters::{line_index::LineIndex, PositionEncoding},
-        parser::parse_css,
-        wasm_text_document::create_text_document,
-    };
+    use crate::service::wasm_bindings::WASMLanguageService;
     use biome_rowan::AstNode;
+    use lsp_types::Uri;
     use serde_wasm_bindgen;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen(typescript_custom_section)]
     const TS_APPEND_CONTENT: &'static str = r#"
-    export async function get_document_symbols(document: import("vscode-languageserver-textdocument").TextDocument): Promise<import("vscode-languageserver-types").DocumentSymbol[] | null>;"#;
+    export async function get_document_symbols(documentUri: string): import("vscode-languageserver-types").DocumentSymbol[];"#;
 
-    #[wasm_bindgen(skip_typescript)]
-    pub fn get_document_symbols(document: JsValue) -> JsValue {
-        let parsed_text_document = create_text_document(document);
-        let css_parse = parse_css(&parsed_text_document.text);
-        let line_index = LineIndex::new(&parsed_text_document.text);
-        let encoding = PositionEncoding::Utf16;
+    #[wasm_bindgen]
+    impl WASMLanguageService {
+        #[wasm_bindgen(skip_typescript, js_name = getDocumentSymbols)]
+        pub fn get_document_symbols(&self, document_uri: String) -> JsValue {
+            let store_document = self.store.get(&Uri::from_str(&document_uri).unwrap());
 
-        let symbols = extract_document_symbols(css_parse.tree().syntax(), &line_index, encoding);
+            let symbols = match store_document {
+                Some(store_document) => extract_document_symbols(
+                    store_document.css_tree.tree().syntax(),
+                    &store_document.line_index,
+                    self.options.encoding,
+                    &self.get_css_custom_data(),
+                ),
+                None => Vec::new(),
+            };
 
-        if symbols.is_empty() {
-            JsValue::NULL
-        } else {
             serde_wasm_bindgen::to_value(&symbols).unwrap()
         }
     }

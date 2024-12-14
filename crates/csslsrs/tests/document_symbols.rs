@@ -241,7 +241,7 @@ fn test_nested_selectors() {
                 },
                 end: Position {
                     line: 0,
-                    character: 29,
+                    character: 16,
                 },
             },
             selection_range: Range {
@@ -251,7 +251,7 @@ fn test_nested_selectors() {
                 },
                 end: Position {
                     line: 0,
-                    character: 4,
+                    character: 5,
                 },
             },
             children: Some(vec![DocumentSymbol {
@@ -263,21 +263,21 @@ fn test_nested_selectors() {
                 range: Range {
                     start: Position {
                         line: 0,
-                        character: 6,
+                        character: 7,
                     },
                     end: Position {
                         line: 0,
-                        character: 27,
+                        character: 15,
                     },
                 },
                 selection_range: Range {
                     start: Position {
                         line: 0,
-                        character: 6,
+                        character: 7,
                     },
                     end: Position {
                         line: 0,
-                        character: 10,
+                        character: 12,
                     },
                 },
                 children: None,

@@ -53,10 +53,14 @@ fn extract_document_symbols(
                         false,
                     )
                 }),
-            // Handle CSS selectors, e.g. `.foo`, `#bar`, `div > span`, etc.
-            CssSyntaxKind::CSS_QUALIFIED_RULE => child
+            // Handle CSS selectors, e.g. `.foo`, `#bar`, `div > span`, etc. Even when nested.
+            CssSyntaxKind::CSS_QUALIFIED_RULE | CssSyntaxKind::CSS_NESTED_QUALIFIED_RULE => child
                 .children()
-                .find(|c| c.kind() == CssSyntaxKind::CSS_SELECTOR_LIST)
+                .find(|c| {
+                    c.kind() == CssSyntaxKind::CSS_SELECTOR_LIST
+                        || c.kind() == CssSyntaxKind::CSS_SUB_SELECTOR_LIST
+                        || c.kind() == CssSyntaxKind::CSS_RELATIVE_SELECTOR_LIST
+                })
                 .map(|selector| {
                     create_symbol(
                         selector.text_trimmed().to_string(),

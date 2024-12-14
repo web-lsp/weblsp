@@ -61,7 +61,7 @@ fn test_universal_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 2,
+                    character: 1,
                 },
             },
             children: None,
@@ -99,7 +99,7 @@ fn test_element_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 5,
+                    character: 4,
                 },
             },
             children: None,
@@ -137,7 +137,7 @@ fn test_compound_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 7,
+                    character: 6,
                 },
             },
             children: None,
@@ -175,7 +175,7 @@ fn test_descendant_selector() {
                 },
                 end: Position {
                     line: 0,
-                    character: 12,
+                    character: 11,
                 },
             },
             children: None,
@@ -213,7 +213,7 @@ fn test_complex_selector_in_list() {
                 },
                 end: Position {
                     line: 0,
-                    character: 39,
+                    character: 38,
                 },
             },
             children: None,
@@ -251,7 +251,7 @@ fn test_nested_selectors() {
                 },
                 end: Position {
                     line: 0,
-                    character: 5,
+                    character: 4,
                 },
             },
             children: Some(vec![DocumentSymbol {
@@ -267,7 +267,7 @@ fn test_nested_selectors() {
                     },
                     end: Position {
                         line: 0,
-                        character: 15,
+                        character: 14,
                     },
                 },
                 selection_range: Range {
@@ -277,7 +277,7 @@ fn test_nested_selectors() {
                     },
                     end: Position {
                         line: 0,
-                        character: 12,
+                        character: 11,
                     },
                 },
                 children: None,
@@ -316,7 +316,7 @@ fn test_at_rule() {
                 },
                 end: Position {
                     line: 0,
-                    character: 7,
+                    character: 6,
                 },
             },
             children: None,
@@ -354,7 +354,7 @@ fn test_selector_with_properties() {
                 },
                 end: Position {
                     line: 0,
-                    character: 5,
+                    character: 4,
                 },
             },
             children: Some(vec![

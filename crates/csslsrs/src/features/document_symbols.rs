@@ -27,15 +27,16 @@ fn extract_document_symbols(
                     create_symbol(
                         String::from("@") + token.text_trimmed(),
                         SymbolKind::NAMESPACE,
-                        range(line_index, child.text_range(), encoding).unwrap(),
+                        range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                         Range::new(
                             position(
                                 line_index,
-                                token.text_range().start() - TextSize::from(1),
+                                token.text_trimmed_range().start() - TextSize::from(1),
                                 encoding,
                             )
                             .unwrap(),
-                            position(line_index, token.text_range().end(), encoding).unwrap(),
+                            position(line_index, token.text_trimmed_range().end(), encoding)
+                                .unwrap(),
                         ),
                         false,
                     )
@@ -50,8 +51,8 @@ fn extract_document_symbols(
                     create_symbol(
                         token.text_trimmed().to_string(),
                         SymbolKind::PROPERTY,
-                        range(line_index, child.text_range(), encoding).unwrap(),
-                        range(line_index, token.text_range(), encoding).unwrap(),
+                        range(line_index, child.text_trimmed_range(), encoding).unwrap(),
+                        range(line_index, token.text_trimmed_range(), encoding).unwrap(),
                         false,
                     )
                 }),
@@ -67,8 +68,8 @@ fn extract_document_symbols(
                     create_symbol(
                         selector.text_trimmed().to_string(),
                         SymbolKind::CLASS,
-                        range(line_index, child.text_range(), encoding).unwrap(),
-                        range(line_index, selector.text_range(), encoding).unwrap(),
+                        range(line_index, child.text_trimmed_range(), encoding).unwrap(),
+                        range(line_index, selector.text_trimmed_range(), encoding).unwrap(),
                         false,
                     )
                 }),

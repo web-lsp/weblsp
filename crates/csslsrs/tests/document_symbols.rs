@@ -1,7 +1,7 @@
 #![allow(deprecated)]
 // TMP: deprecated is deprecated in Document Symbol, but we still need to intialize it to None, and hide the warning.
 use csslsrs::service::LanguageService;
-use lsp_types::{DocumentSymbol, Position, Range, SymbolKind, TextDocumentItem, Uri};
+use lsp_types::{DocumentSymbol, Position, Range, SymbolKind, SymbolTag, TextDocumentItem, Uri};
 use std::str::FromStr;
 
 fn assert_document_symbols(
@@ -415,6 +415,71 @@ fn test_selector_with_properties() {
                     children: None,
                 },
             ]),
+        }],
+    );
+}
+
+#[test]
+fn test_deprecated_property() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        ".foo { box-align: center; }",
+        vec![DocumentSymbol {
+            name: ".foo".to_string(),
+            detail: None,
+            kind: SymbolKind::CLASS,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 27,
+                },
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 4,
+                },
+            },
+            children: Some(vec![DocumentSymbol {
+                name: "box-align".to_string(),
+                detail: None,
+                kind: SymbolKind::PROPERTY,
+                tags: Some(vec![SymbolTag::DEPRECATED]),
+                deprecated: None,
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 7,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 24,
+                    },
+                },
+                selection_range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 7,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 16,
+                    },
+                },
+                children: None,
+            }]),
         }],
     );
 }

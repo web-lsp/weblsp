@@ -4,7 +4,7 @@ use crate::{
         to_proto::{position, range},
         PositionEncoding,
     },
-    css_data::CssCustomData,
+    css_data::{CssCustomData, Status},
     service::LanguageService,
 };
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
@@ -16,7 +16,7 @@ fn extract_document_symbols(
     node: &SyntaxNode<CssLanguage>,
     line_index: &LineIndex,
     encoding: PositionEncoding,
-    _custom_data: &Vec<&CssCustomData>,
+    custom_data: &Vec<&CssCustomData>,
 ) -> Vec<DocumentSymbol> {
     let mut symbols = Vec::new();
     for child in node.children() {
@@ -53,7 +53,7 @@ fn extract_document_symbols(
                         SymbolKind::PROPERTY,
                         range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                         range(line_index, token.text_trimmed_range(), encoding).unwrap(),
-                        false,
+                        is_property_deprecated(token.text_trimmed(), custom_data),
                     )
                 }),
             // Handle CSS selectors, e.g. `.foo`, `#bar`, `div > span`, etc. Even when nested.
@@ -79,7 +79,7 @@ fn extract_document_symbols(
         // If we have a symbol, search for nested children symbols.
         if let Some(mut sym) = symbol {
             let children_symbols =
-                extract_document_symbols(&child, line_index, encoding, _custom_data);
+                extract_document_symbols(&child, line_index, encoding, custom_data);
             if !children_symbols.is_empty() {
                 sym.children = Some(children_symbols);
             }
@@ -87,7 +87,7 @@ fn extract_document_symbols(
         } else {
             // Even if we don't have a symbol, we still want to search for nested symbols.
             let nested_symbols =
-                extract_document_symbols(&child, line_index, encoding, _custom_data);
+                extract_document_symbols(&child, line_index, encoding, custom_data);
             symbols.extend(nested_symbols);
         }
     }
@@ -114,6 +114,16 @@ fn create_symbol(
         selection_range,
         children: None,
     }
+}
+
+fn is_property_deprecated(property: &str, custom_data: &[&CssCustomData]) -> bool {
+    custom_data.iter().any(|data| {
+        data.properties.as_ref().map_or(false, |properties| {
+            properties
+                .iter()
+                .any(|prop| prop.name == property && matches!(prop.status, Some(Status::Obsolete)))
+        })
+    })
 }
 
 impl LanguageService {

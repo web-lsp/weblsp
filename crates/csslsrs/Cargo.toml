@@ -1,7 +1,10 @@
 [package]
 name = "csslsrs"
+description = "Language service for CSS, providing features like completions, hover, and folding ranges."
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
+include = ["data", "src"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -23,7 +26,7 @@ rustc-hash = "2.0.0"
 palette = { git = "https://github.com/Ogeon/palette/", rev = "234309cdd2f96ac04f034f963c018b98065dcfd1", version = "0.7.6" }
 
 [dev-dependencies]
-criterion = { package = "codspeed-criterion-compat", version = "*" }
+criterion = { package = "codspeed-criterion-compat", version = "2.7.2" }
 
 [[bench]]
 name = "bench_main"

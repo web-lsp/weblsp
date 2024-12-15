@@ -1,14 +1,8 @@
 use lsp_server::{Connection, ExtractError, Request, RequestId};
-use lsp_types::request::Request as _;
 use std::error::Error;
 use std::str::FromStr;
 
 use crate::css;
-
-#[derive(Default)]
-pub struct RequestOutcome {
-    pub(crate) is_shutdown: bool,
-}
 
 /// Used by the main loop. Based on the document's language, this function will dispatch the request to the appropriate language handler.
 /// Requests are LSP features that the client wants to use, and the server must respond to each request.
@@ -16,18 +10,7 @@ pub fn handle_request(
     req: lsp_server::Request,
     css_language_service: &mut csslsrs::service::LanguageService,
     connection: &Connection,
-) -> Result<RequestOutcome, Box<dyn Error + Sync + Send>> {
-    if req.method == lsp_types::request::Shutdown::METHOD {
-        connection
-            .sender
-            .send(lsp_server::Message::Response(lsp_server::Response::new_ok(
-                req.id,
-                (),
-            )))?;
-
-        return Ok(RequestOutcome { is_shutdown: true });
-    }
-
+) -> Result<(), Box<dyn Error + Sync + Send>> {
     let language_id = get_language_id(&req, css_language_service)?;
     match language_id.as_str() {
         "css" => {
@@ -38,7 +21,7 @@ pub fn handle_request(
         }
     }
 
-    Ok(RequestOutcome::default())
+    Ok(())
 }
 
 // TMP: TODO: For now, we use CSSlsrs' store, because we only support CSS. So I can just retrieve the document from this store from its URI.

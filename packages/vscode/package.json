@@ -1,47 +1,58 @@
 {
-  "name": "@weblsp/vscode",
-  "displayName": "WEBlsp",
-  "version": "1.0.0",
-  "description": "A better Language Server for the Web, made with Rust — WORK IN PROGRESS ⚠️",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/web-lsp/weblsp"
-  },
-  "license": "MIT",
-  "engines": {
-    "vscode": "^1.82.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "activationEvents": [
-    "onLanguage:css"
-  ],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "configuration": {
-      "type": "object",
-      "title": "CSS Language Server Settings",
-      "properties": {
-        "cssLanguageServer.path": {
-          "type": "string",
-          "description": "Path to the CSS language server executable",
-          "default": ""
-        }
-      }
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "build": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
-  },
-  "devDependencies": {
-    "@types/node": "^22.9.1",
-    "@types/vscode": "^1.95.0",
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "vscode-languageclient": "^9.0.1"
-  }
+	"name": "@weblsp/vscode",
+	"displayName": "WEBlsp",
+	"version": "1.0.0",
+	"description": "A better Language Server for the Web, made with Rust — WORK IN PROGRESS ⚠️",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/web-lsp/weblsp"
+	},
+	"license": "MIT",
+	"engines": {
+		"vscode": "^1.82.0"
+	},
+	"categories": [
+		"Programming Languages"
+	],
+	"activationEvents": [
+		"onLanguage:css"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "WEBlsp configuration",
+			"properties": {
+				"weblsp.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"weblsp.server.path": {
+					"type": "string",
+					"description": "Path to the WEBlsp executable",
+					"default": ""
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run build",
+		"build": "tsc -p ./",
+		"watch": "tsc -watch -p ./"
+	},
+	"devDependencies": {
+		"@types/node": "^22.9.1",
+		"@types/vscode": "^1.95.0",
+		"typescript": "^5.6.3"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^9.0.1"
+	}
 }

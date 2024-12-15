@@ -4,7 +4,7 @@ mod requests;
 mod response;
 mod server;
 use lsp_server::{Connection, Message};
-use lsp_types::{notification::Notification, InitializeParams};
+use lsp_types::InitializeParams;
 use server::get_server_capabilities;
 use std::{error::Error, process::ExitCode};
 
@@ -49,34 +49,25 @@ fn main_loop(
     init_params: serde_json::Value,
     mut css_language_service: csslsrs::service::LanguageService,
 ) -> Result<ExitCode, Box<dyn Error + Sync + Send>> {
-    let mut awaiting_exit = false;
     let _init_params: InitializeParams = serde_json::from_value(init_params).unwrap();
 
     for msg in &connection.receiver {
-        // TODO: Handle trace levels and notifications instead of just printing them to stderr.
-        eprintln!("new msg: {:?}", msg);
-
-        // If we're waiting for an exit notification, any message other than it is an error, and will cause the server to exit with a failure exit code.
-        // As such, we can handle this outside of the match statement.
-        if awaiting_exit {
-            if let Message::Notification(not) = &msg {
-                if not.method == lsp_types::notification::Exit::METHOD {
-                    return Ok(ExitCode::SUCCESS);
-                }
-            }
-            eprintln!("Shutting down without receiving `Exit` notification.");
-            return Ok(ExitCode::FAILURE);
-        }
-
         // Handle the rest of the messages.
         match msg {
             Message::Request(req) => {
-                let request =
-                    requests::handle_request(req, &mut css_language_service, &connection)?;
+                match connection.handle_shutdown(&req) {
+                    Ok(value) => {
+                        if value {
+                            return Ok(ExitCode::SUCCESS);
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("Error handling shutdown request: {:?}", err);
+                        return Ok(ExitCode::FAILURE);
+                    }
+                };
 
-                if request.is_shutdown {
-                    awaiting_exit = true;
-                }
+                requests::handle_request(req, &mut css_language_service, &connection)?;
             }
             Message::Response(resp) => {
                 response::handle_response(resp)?;

@@ -1,8 +1,36 @@
-use lsp_types::{CompletionItem, CompletionList, Position, TextDocumentItem};
+use biome_rowan::{AstNode, SyntaxNodeOptionExt};
+use lsp_types::{CompletionList, Position, TextDocumentItem};
 
-use crate::{service::LanguageService, store::StoreEntry};
+use crate::{
+    converters::{from_proto::offset, PositionEncoding},
+    service::LanguageService,
+    store::StoreEntry,
+};
 
-fn compute_completions(store_entry: &StoreEntry, position: Position) -> CompletionList {
+fn compute_completions(
+    store_entry: &StoreEntry,
+    position: Position,
+    encoding: PositionEncoding,
+) -> CompletionList {
+    let offset = offset(&store_entry.line_index, position, encoding).unwrap();
+    let parent = store_entry
+        .css_tree
+        .tree()
+        .syntax()
+        .token_at_offset(offset)
+        .left_biased()
+        .unwrap()
+        .parent();
+
+    if let Some(kind) = parent.kind() {
+        match kind {
+            biome_css_syntax::CssSyntaxKind::CSS_ROOT => {
+                
+            }
+            _ => todo!(),
+        }
+    };
+
     CompletionList {
         is_incomplete: true,
         items: vec![],
@@ -18,7 +46,9 @@ impl LanguageService {
         let store_document = self.store.get(&document.uri);
 
         match store_document {
-            Some(store_document) => compute_completions(store_document, position),
+            Some(store_document) => {
+                compute_completions(store_document, position, self.options.encoding)
+            }
             None => empty_completion_list(),
         }
     }
@@ -56,7 +86,7 @@ mod wasm_bindings {
             let completions = match store_document {
                 Some(store_document) => {
                     let position: Position = serde_wasm_bindgen::from_value(position).unwrap();
-                    compute_completions(store_document, position)
+                    compute_completions(store_document, position, self.options.encoding)
                 }
                 None => empty_completion_list(),
             };

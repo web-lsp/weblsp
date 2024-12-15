@@ -1,13 +1,15 @@
+use std::str::FromStr;
+
 use csslsrs::{
     css_data::CssCustomData,
     service::{LanguageService, LanguageServiceOptions},
 };
 use lsp_types::{
     Command, CompletionItem, CompletionItemKind, CompletionList, CompletionTextEdit, Documentation,
-    InsertTextFormat, Position,
+    InsertTextFormat, Position, TextDocumentItem, Uri,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ItemDescription {
     label: String,
     detail: Option<String>,
@@ -21,7 +23,11 @@ pub struct ItemDescription {
     sort_text: Option<String>,
 }
 
-pub fn assert_completion(completions: &CompletionList, expected: &ItemDescription, document: &str) {
+pub fn assert_completion(
+    completions: &CompletionList,
+    expected: &ItemDescription,
+    document_content: &str,
+) {
     let matches: Vec<&CompletionItem> = completions
         .items
         .iter()
@@ -69,7 +75,7 @@ pub fn assert_completion(completions: &CompletionList, expected: &ItemDescriptio
     }
     if let Some(result_text) = &expected.result_text {
         if let Some(text_edit) = &match_item.text_edit {
-            let edited_text = apply_text_edit(document, text_edit);
+            let edited_text = apply_text_edit(document_content, text_edit);
             assert_eq!(edited_text, *result_text);
         }
     }
@@ -112,11 +118,15 @@ fn apply_text_edit(document: &str, text_edit: &CompletionTextEdit) -> String {
     }
 }
 
-pub async fn test_completion_for(
-    content: String,
-    expected: ExpectedCompetions,
+struct ExpectedCompletions {
+    count: Option<usize>,
+    items: Option<Vec<ItemDescription>>,
+}
+
+fn test_completion_for(
+    content: &str,
+    expected: ExpectedCompletions,
     test_uri: &str,
-    workspace_folder_uri: &str,
     custom_data: Vec<CssCustomData>,
 ) {
     let offset = content.find('|').expect("| missing in value");
@@ -131,7 +141,15 @@ pub async fn test_completion_for(
         ls.add_css_custom_data(data);
     }
 
-    let document = TextDocument::create(test_uri, lang, 0, value);
+    let document = TextDocumentItem::new(
+        Uri::from_str(test_uri).unwrap(),
+        "css".to_string(),
+        0,
+        value.clone(),
+    );
+
+    ls.upsert_document(document.clone());
+
     let position = Position::new(0, offset as u32);
 
     let list = ls.get_completions(document, position);
@@ -141,7 +159,36 @@ pub async fn test_completion_for(
     }
     if let Some(items) = expected.items {
         for item in items {
-            assert_completion(&list, &item, &document);
+            assert_completion(&list, &item, &value);
         }
     }
+}
+
+#[test]
+fn test_top_level_completions() {
+    test_completion_for(
+        "| ",
+        ExpectedCompletions {
+            count: None,
+            items: Some(vec![
+                ItemDescription {
+                    label: "@import".to_string(),
+                    result_text: Some("@import body {".to_string()),
+                    ..Default::default()
+                },
+                ItemDescription {
+                    label: "@keyframes".to_string(),
+                    result_text: Some("@keyframes body {".to_string()),
+                    ..Default::default()
+                },
+                ItemDescription {
+                    label: "html".to_string(),
+                    result_text: Some("html body {".to_string()),
+                    ..Default::default()
+                },
+            ]),
+        },
+        "file:///test",
+        vec![],
+    );
 }

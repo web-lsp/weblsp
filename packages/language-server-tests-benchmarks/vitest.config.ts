@@ -18,11 +18,11 @@ class Sequencer extends BaseSequencer {
 
 export default defineConfig({
 	test: {
-		dir: "tests",
+		dir: "src/tests",
 		watch: false,
 		isolate: false,
 		fileParallelism: false,
-		setupFiles: ["./tests/setup.ts"],
+		setupFiles: ["./src/tests/setup.ts"],
 		sequence: {
 			sequencer: Sequencer,
 		},

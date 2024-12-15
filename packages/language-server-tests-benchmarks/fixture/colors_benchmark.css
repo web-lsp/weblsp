@@ -1,0 +1,17 @@
+.header {
+    background-color: #333;
+    color: white;
+    padding: 15px 20px;
+    text-align: center;
+}
+
+h1 {
+    color: red;
+    background-color: lab(50% 50% 50%);
+}
+
+.header .logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: lch(50% 50% 50%);
+}

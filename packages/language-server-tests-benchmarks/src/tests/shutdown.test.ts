@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { ServerCapabilities } from "vscode-languageserver-protocol/node";
 
 describe("Language server initilization", () => {
 	it("Can shutdown server", async () => {

@@ -8,35 +8,61 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { URI } from "vscode-uri";
 import * as assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 
-const pathToBinary = fileURLToPath(
-	new URL("../../../target/debug/weblsp", import.meta.url)
-);
+let pathToBinary: string;
+if (process.env.BENCHMARK === "true" || process.env.RELEASE === "true") {
+	pathToBinary = fileURLToPath(
+		new URL("../../../target/release/weblsp", import.meta.url)
+	);
+} else {
+	pathToBinary = fileURLToPath(
+		new URL("../../../target/debug/weblsp", import.meta.url)
+	);
+}
 
 export const fixtureDir = URI.file(
 	fileURLToPath(new URL("./fixture", import.meta.url))
 ).toString();
 
-export type LanguageServerHandle = ReturnType<typeof startLanguageServer>;
+export type LanguageServerHandle = Awaited<
+	ReturnType<typeof startLanguageServer>
+>;
 
-export async function startLanguageServer(cwd?: string | undefined) {
-	console.info(`Starting language server at ${pathToBinary}`);
-	const childProcess = cp.spawn(pathToBinary, [], {
-		env: process.env,
-		cwd,
-		stdio: "pipe",
-	});
+export async function startLanguageServer(
+	cwd?: string | undefined,
+	which: "weblsp" | "vscode-css" = "weblsp"
+) {
+	if (which === "weblsp")
+		console.info(`Starting language server at ${pathToBinary}`);
+
+	const childProcess =
+		which === "weblsp"
+			? cp.spawn(pathToBinary, [], {
+					env: process.env,
+					cwd,
+					stdio: "pipe",
+			  })
+			: cp.fork(
+					"node_modules/vscode-langservers-extracted/bin/vscode-css-language-server",
+					["--stdio", `--clientProcessId=${process.pid.toString()}`],
+					{
+						execArgv: ["--nolazy"],
+						env: process.env,
+						cwd,
+						stdio: "pipe",
+					}
+			  );
 
 	if (!childProcess.stdout || !childProcess.stdin) {
 		throw new Error("Bad stdio configuration, should be pipe");
 	}
 
-	if (process.env.DEBUG) {
-		childProcess.stderr?.on("data", (data) => {
+	childProcess.stderr?.on("data", (data) => {
+		if (process.env.DEBUG) {
 			console.error(data.toString());
-		});
-	}
+		}
+	});
 
 	const connection = _.createProtocolConnection(
 		childProcess.stdout,
@@ -48,7 +74,7 @@ export async function startLanguageServer(cwd?: string | undefined) {
 	connection.onClose((e) => console.log("Closed", e));
 
 	connection.onUnhandledNotification((e) =>
-		console.log("Unhandled notificaiton", e)
+		console.log("Unhandled notification", e)
 	);
 
 	connection.onError((e) => console.log("Error:", e));
@@ -148,6 +174,15 @@ export async function startLanguageServer(cwd?: string | undefined) {
 			},
 		}
 	);
+
+	// VS Code's CSS language server crashes if this is not set
+	if (which === "vscode-css") {
+		Object.assign(settings, { "css.lint.validProperties": [] });
+		await connection.sendNotification(
+			_.DidChangeConfigurationNotification.type,
+			{ settings } satisfies _.DidChangeConfigurationParams
+		);
+	}
 
 	return {
 		process: childProcess,

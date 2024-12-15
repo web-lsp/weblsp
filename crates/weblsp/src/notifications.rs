@@ -22,9 +22,6 @@ pub fn handle_notification(
                 serde_json::from_value(notification.params).unwrap();
             match params.text_document.language_id.as_str() {
                 "css" => {
-                    eprintln!(
-                        "textDocument/didOpen: adding CSS document to CSS Language Service store"
-                    );
                     css_language_service.upsert_document(params.text_document);
                 }
                 _ => {

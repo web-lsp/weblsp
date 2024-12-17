@@ -42,20 +42,37 @@ fn extract_document_symbols(
                     )
                 })
             }),
-            // Handle CSS properties, e.g. `color`, `font-size`, etc.
-            CssSyntaxKind::CSS_GENERIC_PROPERTY => child
-                .children()
-                .find(|c| c.kind() == CssSyntaxKind::CSS_IDENTIFIER)
-                .and_then(|c| c.first_token())
-                .map(|token| {
-                    create_symbol(
-                        token.text_trimmed().to_string(),
-                        SymbolKind::PROPERTY,
-                        range(line_index, child.text_trimmed_range(), encoding).unwrap(),
-                        range(line_index, token.text_trimmed_range(), encoding).unwrap(),
-                        is_property_deprecated(token.text_trimmed(), custom_data),
-                    )
-                }),
+            CssSyntaxKind::CSS_GENERIC_PROPERTY => child.children().find_map(|c| {
+                eprintln!("WHY: {:?}", child.first_child_or_token());
+                eprintln!("WHY2: {:?}", c.kind());
+                match c.kind() {
+                    // Handle CSS variables, e.g. `--foo`, `--bar`, etc.
+                    CssSyntaxKind::CSS_DASHED_IDENTIFIER => c.first_token().map(|property_node| {
+                        eprintln!("variable_node: {:?}", property_node.text_trimmed());
+                        create_symbol(
+                            property_node.text_trimmed().to_string(),
+                            SymbolKind::VARIABLE,
+                            range(line_index, child.text_trimmed_range(), encoding).unwrap(),
+                            range(line_index, property_node.text_trimmed_range(), encoding)
+                                .unwrap(),
+                            false,
+                        )
+                    }),
+                    // Handle CSS properties, e.g. `color`, `font-size`, etc.
+                    CssSyntaxKind::CSS_IDENTIFIER => c.first_token().map(|property_node| {
+                        eprintln!("property_node: {:?}", property_node.text_trimmed());
+                        create_symbol(
+                            property_node.text_trimmed().to_string(),
+                            SymbolKind::PROPERTY,
+                            range(line_index, child.text_trimmed_range(), encoding).unwrap(),
+                            range(line_index, property_node.text_trimmed_range(), encoding)
+                                .unwrap(),
+                            is_property_deprecated(property_node.text_trimmed(), custom_data),
+                        )
+                    }),
+                    _ => None,
+                }
+            }),
             // Handle CSS selectors, e.g. `.foo`, `#bar`, `div > span`, etc. Even when nested.
             CssSyntaxKind::CSS_QUALIFIED_RULE | CssSyntaxKind::CSS_NESTED_QUALIFIED_RULE => child
                 .children()

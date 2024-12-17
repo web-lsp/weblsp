@@ -2,6 +2,7 @@
 // TMP: deprecated is deprecated in Document Symbol, but we still need to intialize it to None, and hide the warning.
 use csslsrs::service::LanguageService;
 use lsp_types::{DocumentSymbol, Position, Range, SymbolKind, SymbolTag, TextDocumentItem, Uri};
+use pretty_assertions::assert_eq;
 use std::str::FromStr;
 
 fn assert_document_symbols(
@@ -481,5 +482,127 @@ fn test_deprecated_property() {
                 children: None,
             }]),
         }],
+    );
+}
+
+#[test]
+fn test_css_variables() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        ":root {--color-primary: #333;}h1 {color: var(--color-primary);}",
+        vec![
+            DocumentSymbol {
+                name: ":root".to_string(),
+                detail: None,
+                kind: SymbolKind::CLASS,
+                tags: None,
+                deprecated: None,
+                range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 30,
+                    },
+                },
+                selection_range: Range {
+                    start: Position {
+                        line: 0,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 0,
+                        character: 5,
+                    },
+                },
+                children: Some(vec![DocumentSymbol {
+                    name: "--color-primary".to_string(),
+                    detail: None,
+                    kind: SymbolKind::VARIABLE,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 7,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 28,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 0,
+                            character: 7,
+                        },
+                        end: Position {
+                            line: 0,
+                            character: 22,
+                        },
+                    },
+                    children: None,
+                }]),
+            },
+            DocumentSymbol {
+                name: "h1".to_string(),
+                detail: None,
+                kind: SymbolKind::CLASS,
+                tags: None,
+                deprecated: None,
+                range: Range {
+                    start: Position {
+                        line: 4,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 6,
+                        character: 1,
+                    },
+                },
+                selection_range: Range {
+                    start: Position {
+                        line: 4,
+                        character: 0,
+                    },
+                    end: Position {
+                        line: 4,
+                        character: 2,
+                    },
+                },
+                children: Some(vec![DocumentSymbol {
+                    name: "color".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 5,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 5,
+                            character: 31,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 5,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 5,
+                            character: 7,
+                        },
+                    },
+                    children: None,
+                }]),
+            },
+        ],
     );
 }

@@ -21,6 +21,7 @@ biome_css_syntax = "0.5.7"
 biome_rowan = "0.5.7"
 rustc-hash = "2.0.0"
 palette = { git = "https://github.com/Ogeon/palette/", rev = "234309cdd2f96ac04f034f963c018b98065dcfd1", version = "0.7.6" }
+pretty_assertions = "1.4.1"
 
 [dev-dependencies]
 criterion = { package = "codspeed-criterion-compat", version = "*" }

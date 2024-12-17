@@ -556,22 +556,22 @@ fn test_css_variables() {
                 deprecated: None,
                 range: Range {
                     start: Position {
-                        line: 4,
-                        character: 0,
+                        line: 0,
+                        character: 30,
                     },
                     end: Position {
-                        line: 6,
-                        character: 1,
+                        line: 0,
+                        character: 63,
                     },
                 },
                 selection_range: Range {
                     start: Position {
-                        line: 4,
-                        character: 0,
+                        line: 0,
+                        character: 30,
                     },
                     end: Position {
-                        line: 4,
-                        character: 2,
+                        line: 0,
+                        character: 32,
                     },
                 },
                 children: Some(vec![DocumentSymbol {
@@ -582,22 +582,22 @@ fn test_css_variables() {
                     deprecated: None,
                     range: Range {
                         start: Position {
-                            line: 5,
-                            character: 2,
+                            line: 0,
+                            character: 34,
                         },
                         end: Position {
-                            line: 5,
-                            character: 31,
+                            line: 0,
+                            character: 61,
                         },
                     },
                     selection_range: Range {
                         start: Position {
-                            line: 5,
-                            character: 2,
+                            line: 0,
+                            character: 34,
                         },
                         end: Position {
-                            line: 5,
-                            character: 7,
+                            line: 0,
+                            character: 39,
                         },
                     },
                     children: None,

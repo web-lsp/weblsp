@@ -187,6 +187,7 @@ pub mod wasm_bindings {
         getDocumentColors: typeof get_document_colors;
         getColorPresentations: typeof get_color_presentations;
         getFoldingRanges: typeof get_folding_ranges;
+        getCompletions: typeof get_completions;
         free(): void;
     }
     "#;

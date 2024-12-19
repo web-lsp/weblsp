@@ -606,3 +606,126 @@ fn test_css_variables() {
         ],
     );
 }
+
+#[test]
+fn test_at_rule_with_nested_properties() {
+    let mut ls = LanguageService::default();
+
+    assert_document_symbols(
+        &mut ls,
+        "@font-palette-values --my-palette {\n  font-family: Bixa;\n  base-palette: 1;\n  override-colors: 0 #ff0000;\n}",
+        vec![DocumentSymbol {
+            name: "@font-palette-values".to_string(),
+            detail: None,
+            kind: SymbolKind::NAMESPACE,
+            tags: None,
+            deprecated: None,
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 4,
+                    character: 1,
+                },
+            },
+            selection_range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 0,
+                    character: 20,
+                },
+            },
+            children: Some(vec![
+                DocumentSymbol {
+                    name: "font-family".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 1,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 1,
+                            character: 19,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 1,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 1,
+                            character: 13,
+                        },
+                    },
+                    children: None,
+                },
+                DocumentSymbol {
+                    name: "base-palette".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 2,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 2,
+                            character: 17,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 2,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 2,
+                            character: 14,
+                        },
+                    },
+                    children: None,
+                },
+                DocumentSymbol {
+                    name: "override-colors".to_string(),
+                    detail: None,
+                    kind: SymbolKind::PROPERTY,
+                    tags: None,
+                    deprecated: None,
+                    range: Range {
+                        start: Position {
+                            line: 3,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 3,
+                            character: 28,
+                        },
+                    },
+                    selection_range: Range {
+                        start: Position {
+                            line: 3,
+                            character: 2,
+                        },
+                        end: Position {
+                            line: 3,
+                            character: 17,
+                        },
+                    },
+                    children: None,
+                },
+            ]),
+            }],
+    );
+}

@@ -36,6 +36,7 @@ fn extract_document_symbols(
                         Range::new(
                             position(
                                 line_index,
+                                // We need to include the `@` symbol in the selection range.
                                 token.text_trimmed_range().start() - TextSize::from(1),
                                 encoding,
                             )

@@ -3,7 +3,7 @@ import { startLanguageServer } from "../../server";
 import { fileURLToPath } from "url";
 
 const filePath = fileURLToPath(
-	new URL("../../../fixture/document_symbols_benchmark.css", import.meta.url)
+	new URL("../../../fixture/document_symbols.css", import.meta.url)
 );
 
 const weblsp = await startLanguageServer(undefined, "weblsp");

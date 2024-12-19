@@ -2,6 +2,8 @@
 name = "weblsp"
 version = "0.1.0"
 edition = "2021"
+description = "Language server for the web."
+license = "MIT"
 
 [dependencies]
 lsp-server = "0.7.7"

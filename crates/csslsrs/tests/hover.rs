@@ -63,11 +63,59 @@ fn test_hover_over_color_property_inline() {
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `<color>`\n\n**Restriction**:\n- color\n**Supported Browsers**:\n- E12\n- FF1\n- S1\n- C1\n- IE3\n- O3.5\n\n**Reference**:\n- [MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color)\n\n".to_owned()
+            value: "Sets the color of an element's text\n\nSupported by Edge 12, Firefox 1, Safari 1, Chrome 1, Internet Explorer 3, Opera 3.5.\n\nSyntax: `<color>`\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color), [Can I Use](https://caniuse.com/?search=color)\n\n".to_owned()
         }),
         range: Some(Range {
             start: Position { line: 0, character: 8 },
             end: Position { line: 0, character: 13 }
+        }) };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[test]
+fn test_hover_over_experimental_property() {
+    let css_text = ".test { |align-tracks: center; }";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "🧪 *Experimental, use with caution.*\n\nThe align-tracks CSS property sets the alignment in the masonry axis for grid containers that have masonry in their block axis.\n\nSyntax: `[ normal | <baseline-position> | <content-distribution> | <overflow-position>? <content-position> ]#`\n\n".to_owned()
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 8 },
+            end: Position { line: 0, character: 20 }
+        }) };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[test]
+fn test_hover_over_obsolete_property() {
+    let css_text = ".test { |box-align: center; }";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "🚧 *Obsolete, consider using alternatives.*\n\nThe box-align CSS property specifies how an element aligns its contents across its layout in a perpendicular direction. The effect of the property is only visible if there is extra space in the box.\n\nSupported by Edge 12, Firefox 49, Safari 3, Chrome 1, Opera 15.\n\nSyntax: `start | center | end | baseline | stretch`\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/CSS/box-align), [Can I Use](https://caniuse.com/?search=box-align)\n\n".to_owned()
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 8 },
+            end: Position { line: 0, character: 17 }
+        }) };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[test]
+fn test_hover_over_non_standard_property() {
+    let css_text = ".test { |-moz-border-bottom-colors: red; }";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "🚨 *Non-standard, avoid using it.*\n\nSets a list of colors for the bottom border.\n\nSupported by Firefox 1.\n\nSyntax: `<color>+ | none`\n\n".to_owned()
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 8 },
+            end: Position { line: 0, character: 33 }
         }) };
 
     assert_hover(css_text, expected_hover);
@@ -79,7 +127,7 @@ fn test_hover_over_color_property() {
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**color**\n\nSets the color of an element's text\n\n**Syntax**: `<color>`\n\n**Restriction**:\n- color\n**Supported Browsers**:\n- E12\n- FF1\n- S1\n- C1\n- IE3\n- O3.5\n\n**Reference**:\n- [MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color)\n\n".to_owned()
+            value: "Sets the color of an element's text\n\nSupported by Edge 12, Firefox 1, Safari 1, Chrome 1, Internet Explorer 3, Opera 3.5.\n\nSyntax: `<color>`\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/CSS/color), [Can I Use](https://caniuse.com/?search=color)\n\n".to_owned()
         }),
         range: Some(Range {
             start: Position { line: 1, character: 2 },
@@ -234,7 +282,7 @@ fn test_hover_with_escaped_brackets() {
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**.color-\\[red\\]**\n\n[Selector Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): (0, 1, 0)\n\n".to_string(),
+            value: "**.color-\\\\[red\\\\]**\n\n[Selector Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): (0, 1, 0)\n\n" .to_string(),
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },
@@ -257,6 +305,24 @@ fn test_hover_with_escaped_colon() {
         range: Some(Range {
             start: Position { line: 0, character: 0 },
             end: Position { line: 0, character: 13 },
+        }),
+    };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[ignore]
+#[test]
+fn test_hover_at_rule() {
+    let css_text = "|@media screen and (min-width: 900px) {}";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "**@media**\n\n[At Rule Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): (0, 0, 0)\n\n".to_string(),
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 0 },
+            end: Position { line: 0, character: 6 },
         }),
     };
 

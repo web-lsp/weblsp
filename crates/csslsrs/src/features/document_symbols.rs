@@ -11,7 +11,7 @@ use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode, TextSize};
 use lsp_types::{DocumentSymbol, Range, SymbolKind, SymbolTag, TextDocumentItem};
 
-// Recursively extracts document symbols from the given CSS node.
+// From a given CSS node, recursively extract document symbols based on their kind in the CSS Syntax Tree.
 fn extract_document_symbols(
     node: &SyntaxNode<CssLanguage>,
     line_index: &LineIndex,
@@ -26,6 +26,11 @@ fn extract_document_symbols(
                 at_rule.first_token().map(|token| {
                     create_symbol(
                         String::from("@") + token.text_trimmed(),
+                        // For some at-rules, we want to include more details, e.g. `@media` should include the media query list.
+                        at_rule
+                            .first_child()
+                            .filter(|child| child.kind() == CssSyntaxKind::CSS_MEDIA_QUERY_LIST)
+                            .map(|child| child.text_trimmed().to_string()),
                         SymbolKind::NAMESPACE,
                         range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                         Range::new(
@@ -43,14 +48,12 @@ fn extract_document_symbols(
                 })
             }),
             CssSyntaxKind::CSS_GENERIC_PROPERTY => child.children().find_map(|c| {
-                eprintln!("WHY: {:?}", child.first_child_or_token());
-                eprintln!("WHY2: {:?}", c.kind());
                 match c.kind() {
                     // Handle CSS variables, e.g. `--foo`, `--bar`, etc.
                     CssSyntaxKind::CSS_DASHED_IDENTIFIER => c.first_token().map(|property_node| {
-                        eprintln!("variable_node: {:?}", property_node.text_trimmed());
                         create_symbol(
                             property_node.text_trimmed().to_string(),
+                            None,
                             SymbolKind::VARIABLE,
                             range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                             range(line_index, property_node.text_trimmed_range(), encoding)
@@ -60,9 +63,9 @@ fn extract_document_symbols(
                     }),
                     // Handle CSS properties, e.g. `color`, `font-size`, etc.
                     CssSyntaxKind::CSS_IDENTIFIER => c.first_token().map(|property_node| {
-                        eprintln!("property_node: {:?}", property_node.text_trimmed());
                         create_symbol(
                             property_node.text_trimmed().to_string(),
+                            None,
                             SymbolKind::PROPERTY,
                             range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                             range(line_index, property_node.text_trimmed_range(), encoding)
@@ -84,6 +87,7 @@ fn extract_document_symbols(
                 .map(|selector| {
                     create_symbol(
                         selector.text_trimmed().to_string(),
+                        None,
                         SymbolKind::CLASS,
                         range(line_index, child.text_trimmed_range(), encoding).unwrap(),
                         range(line_index, selector.text_trimmed_range(), encoding).unwrap(),
@@ -112,8 +116,10 @@ fn extract_document_symbols(
     symbols
 }
 
+// Create a LSP `DocumentSymbol` based on the given parameters.
 fn create_symbol(
     name: String,
+    detail: Option<String>,
     kind: SymbolKind,
     range: lsp_types::Range,
     selection_range: lsp_types::Range,
@@ -123,7 +129,7 @@ fn create_symbol(
     #[allow(deprecated)]
     DocumentSymbol {
         name,
-        detail: None,
+        detail,
         kind,
         tags: is_deprecated.then(|| vec![SymbolTag::DEPRECATED]),
         deprecated: None,
@@ -133,6 +139,7 @@ fn create_symbol(
     }
 }
 
+// Use the custom CSS data to determine if a given CSS property is deprecated.
 fn is_property_deprecated(property: &str, custom_data: &[&CssCustomData]) -> bool {
     custom_data.iter().any(|data| {
         data.properties.as_ref().map_or(false, |properties| {

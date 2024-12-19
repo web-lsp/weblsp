@@ -296,7 +296,7 @@ fn test_at_rule() {
         "@media (max-width: 768px) {}",
         vec![DocumentSymbol {
             name: "@media".to_string(),
-            detail: None,
+            detail: Some("(max-width: 768px)".to_string()),
             kind: SymbolKind::NAMESPACE,
             tags: None,
             deprecated: None,

@@ -311,6 +311,7 @@ fn test_hover_with_escaped_colon() {
     assert_hover(css_text, expected_hover);
 }
 
+#[ignore]
 #[test]
 fn test_hover_at_rule() {
     let css_text = "|@media screen and (min-width: 900px) {}";

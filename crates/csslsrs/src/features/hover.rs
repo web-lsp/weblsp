@@ -1,7 +1,8 @@
-use crate::css_data::{CssCustomData, MarkupDescriptionOrString, Reference};
+use crate::css_data::{CssCustomData, MarkupDescriptionOrString, Reference, Status};
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, TextDocumentItem};
+use std::fmt::Write;
 
 use crate::{
     converters::{from_proto::offset, line_index::LineIndex, to_proto::range, PositionEncoding},
@@ -79,6 +80,7 @@ fn get_css_hover_content(
     css_data: &Vec<&CssCustomData>,
 ) -> Option<String> {
     match kind {
+        // Handle CSS properties like "color", "font-size", etc.
         CssSyntaxKind::CSS_IDENTIFIER => {
             for data in css_data {
                 if let Some(property) = data
@@ -88,14 +90,13 @@ fn get_css_hover_content(
                     .flat_map(|props| props.iter())
                     .find(|prop| prop.name == name)
                 {
-                    return Some(format_css_entry(
+                    return Some(format_css_property_entry(
                         &property.name,
+                        &property.status,
                         &property.description,
                         property.syntax.as_deref(),
-                        None,
                         property.browsers.as_deref(),
                         property.references.as_deref(),
-                        property.restrictions.as_deref(),
                     ));
                 }
             }
@@ -111,103 +112,171 @@ fn get_css_hover_content(
                     .flat_map(|ats| ats.iter())
                     .find(|at| at.name == name)
                 {
-                    return Some(format_css_entry(
+                    return Some(format_css_at_rule_entry(
                         &at_directive.name,
+                        &at_directive.status,
                         &at_directive.description,
-                        None,
-                        None,
-                        at_directive.browsers.as_deref(),
                         at_directive.references.as_deref(),
-                        None,
                     ));
                 }
             }
             None
         }
+        // Handle CSS selectors like ".class", "#id", "element", etc.
         CssSyntaxKind::CSS_SELECTOR_LIST
         | CssSyntaxKind::CSS_COMPLEX_SELECTOR
-        | CssSyntaxKind::CSS_COMPOUND_SELECTOR => Some(format_css_entry(
+        | CssSyntaxKind::CSS_COMPOUND_SELECTOR => Some(format_css_selector_entry(
             name,
-            &None,
-            None,
             Some(calculate_specificity(name)),
-            None,
-            None,
-            None,
         )),
         _ => None,
     }
 }
 
-/// Formats the CSS entry into a hover content string.
-fn format_css_entry(
+/// Formats the CSS property entry into a hover content string.
+fn format_css_property_entry(
     name: &str,
+    status: &Option<Status>,
     description: &Option<MarkupDescriptionOrString>,
     syntax: Option<&str>,
-    specificity: Option<(u32, u32, u32)>,
     browsers: Option<&[String]>,
     references: Option<&[Reference]>,
-    restrictions: Option<&[String]>,
 ) -> String {
     let mut content = String::new();
-    content.push_str(&format!("**{}**\n\n", escape_markdown(name)));
-
-    // Add the description if available
-    if let Some(description) = description {
-        match description {
-            MarkupDescriptionOrString::MarkupDescription(markup_description) => {
-                content.push_str(&markup_description.value);
-            }
-            MarkupDescriptionOrString::String(description) => {
-                content.push_str(description);
-            }
-        }
-        content.push_str("\n\n");
-    }
-
-    // Add syntax if available
-    if let Some(syntax) = syntax {
-        content.push_str(&format!("**Syntax**: `{}`\n\n", syntax));
-    }
-
-    // Add specificity if available
-    if let Some((ids, classes, elements)) = specificity {
-        content.push_str(&format!(
-            "[Selector Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): ({}, {}, {})\n\n",
-            ids, classes, elements
-        ));
-    }
-
-    // Add restriction if available
-    if let Some(restriction) = restrictions {
-        content.push_str("**Restriction**: ");
-        for restriction in restriction {
-            content.push_str(&format!("{}, ", restriction.trim()));
-        }
-        content.push_str("\n\n");
-    }
-
-    // Add browsers if available
-    if let Some(browsers) = browsers {
-        content.push_str("**Supported Browsers**: ");
-        for browser in browsers {
-            content.push_str(&format!("{}, ", browser.trim()));
-        }
-        content.push_str("\n\n");
-    }
-
-    // Add reference if available
-    if let Some(references) = references {
-        for reference in references {
-            content.push_str(&format!("[{}]({})\n\n", reference.name, reference.url));
-        }
-    }
-
+    write_status(&mut content, status);
+    write_description(&mut content, description);
+    write_browser_support(&mut content, browsers);
+    write_syntax(&mut content, syntax);
+    write_references(&mut content, references, name);
     content
 }
 
+/// Formats the CSS at-rule entry into a hover content string.
+fn format_css_at_rule_entry(
+    name: &str,
+    status: &Option<Status>,
+    description: &Option<MarkupDescriptionOrString>,
+    references: Option<&[Reference]>,
+) -> String {
+    let mut content = String::new();
+    write_status(&mut content, status);
+    write_description(&mut content, description);
+    write_references(&mut content, references, name);
+    content
+}
+
+/// Formats the CSS selector entry into a hover content string.
+fn format_css_selector_entry(name: &str, specificity: Option<(u32, u32, u32)>) -> String {
+    let mut content = String::new();
+    // TODO: this is a placeholder, we should render an HTML preview of the selector
+    writeln!(content, "**{}**\n", escape_markdown(name)).unwrap();
+    // Add specificity if available
+    if let Some((ids, classes, elements)) = specificity {
+        writeln!(content,
+            "[Selector Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): ({}, {}, {})\n",
+            ids, classes, elements
+        ).unwrap();
+    }
+    content
+}
+
+/// Escapes Markdown characters in the selector name.
 fn escape_markdown(text: &str) -> String {
     text.replace('*', "\\*")
+        .replace('_', "\\_")
+        .replace('`', "\\`")
+        .replace('[', "\\[")
+        .replace(']', "\\]")
+        .replace('(', "\\(")
+        .replace(')', "\\)")
+}
+
+/// Parses the status of a CSS Custom Data to a human-readable string, and writes it to the hover content.
+fn write_status(content: &mut String, status: &Option<Status>) {
+    match status {
+        Some(Status::Experimental) => {
+            writeln!(content, "🧪 *Experimental, use with caution.*\n").unwrap()
+        }
+        Some(Status::Obsolete) => {
+            writeln!(content, "🚧 *Obsolete, consider using alternatives.*\n").unwrap()
+        }
+        Some(Status::Nonstandard) => {
+            writeln!(content, "🚨 *Non-standard, avoid using it.*\n").unwrap()
+        }
+        _ => {}
+    }
+}
+
+/// Writes the description of a CSS Custom Data to the hover content.
+fn write_description(content: &mut String, description: &Option<MarkupDescriptionOrString>) {
+    if let Some(desc) = description {
+        let desc_str = match desc {
+            MarkupDescriptionOrString::MarkupDescription(md) => &md.value,
+            MarkupDescriptionOrString::String(s) => s,
+        };
+        writeln!(content, "{}\n", desc_str).unwrap();
+    }
+}
+
+/// Writes the syntax of a CSS Custom Data to the hover content.
+fn write_syntax(content: &mut String, syntax: Option<&str>) {
+    if let Some(syntax) = syntax {
+        writeln!(content, "Syntax: `{}`\n", syntax).unwrap();
+    }
+}
+
+/// Writes the references of a CSS Custom Data to the hover content.
+fn write_references(
+    content: &mut String,
+    references: Option<&[Reference]>,
+    name_for_caniuse: &str,
+) {
+    if let Some(references) = references {
+        let reference_str = references
+            .iter()
+            .map(|reference| format!("[{}]({})", reference.name, reference.url))
+            .collect::<Vec<_>>()
+            .join(", ");
+        // Add Can I Use as a bonus 🎁
+        let can_i_use_url = format!("https://caniuse.com/?search={}", name_for_caniuse);
+        writeln!(
+            content,
+            "{}, [Can I Use]({})\n",
+            reference_str, can_i_use_url
+        )
+        .unwrap();
+    }
+}
+
+/// Writes the browser support information of a CSS Custom Data to the hover content.
+fn write_browser_support(content: &mut String, browsers: Option<&[String]>) {
+    if let Some(browsers) = browsers {
+        let browsers_str = browsers
+            .iter()
+            .filter_map(|s| parse_browser_name(s.trim()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        if !browsers_str.is_empty() {
+            writeln!(content, "Supported by {}.\n", browsers_str).unwrap();
+        }
+    }
+}
+
+/// Parses browser code (letter + version) to a human-readable string.
+///
+/// Example: "FF78" -> "Firefox 78"
+fn parse_browser_name(name: &str) -> Option<String> {
+    let (browser_code, version) = name.split_at(name.find(|c: char| c.is_ascii_digit())?);
+    let browser = match browser_code {
+        "E" => "Edge",
+        "FF" => "Firefox",
+        "S" => "Safari",
+        "C" => "Chrome",
+        "IE" => "Internet Explorer",
+        "O" => "Opera",
+        _ => return None,
+    };
+    Some(format!("{} {}", browser, version))
 }
 
 /// Given a CSS selector, calculates the specificity of the selector.

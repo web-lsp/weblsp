@@ -12,6 +12,7 @@ describe("Language server initilization", () => {
 			foldingRangeProvider: true,
 			hoverProvider: true,
 			textDocumentSync: 1,
+			documentSymbolProvider: true,
 		};
 
 		expect(languageServer.initializeResult.capabilities).to.deep.equal(

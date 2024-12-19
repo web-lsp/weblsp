@@ -1,0 +1,15 @@
+body {
+    background-color: #fff;
+}
+
+a {
+    color: red;
+}
+
+h1.foo {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+h1 > span {
+    color: linear-gradient(to right, red, #fff);
+}

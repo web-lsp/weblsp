@@ -1,7 +1,8 @@
 use csslsrs::service::LanguageService;
 use lsp_server::{Connection, Message, Request, Response};
 use lsp_types::request::{
-    ColorPresentationRequest, DocumentColor, FoldingRangeRequest, HoverRequest,
+    ColorPresentationRequest, DocumentColor, DocumentSymbolRequest, FoldingRangeRequest,
+    HoverRequest,
 };
 use std::error::Error;
 
@@ -56,6 +57,12 @@ pub fn handle_request(
                 params.text_document_position_params.position,
             );
             send_result(connection, id, serde_json::to_value(&hover).unwrap())?;
+        }
+        "textDocument/documentSymbol" => {
+            let (id, params) = cast::<DocumentSymbolRequest>(req)?;
+            let symbols = language_service
+                .get_document_symbols(get_text_document(params.text_document, language_service)?);
+            send_result(connection, id, serde_json::to_value(&symbols).unwrap())?;
         }
         _ => {
             eprintln!("handle_request: unsupported request: {}", req.method);

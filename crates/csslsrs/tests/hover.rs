@@ -310,3 +310,20 @@ fn test_hover_with_escaped_colon() {
 
     assert_hover(css_text, expected_hover);
 }
+
+#[test]
+fn test_hover_at_rule() {
+    let css_text = "|@media screen and (min-width: 900px) {}";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "**@media**\n\n[At Rule Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): (0, 0, 0)\n\n".to_string(),
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 0 },
+            end: Position { line: 0, character: 6 },
+        }),
+    };
+
+    assert_hover(css_text, expected_hover);
+}

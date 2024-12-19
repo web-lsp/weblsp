@@ -1,4 +1,6 @@
-use crate::css_data::{CssCustomData, MarkupDescriptionOrString, Reference, Status};
+use crate::css_data::{
+    AtDirectiveEntry, CssCustomData, MarkupDescriptionOrString, PropertyEntry, Reference, Status,
+};
 use biome_css_syntax::{CssLanguage, CssSyntaxKind};
 use biome_rowan::{AstNode, SyntaxNode};
 use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, TextDocumentItem};
@@ -90,20 +92,14 @@ fn get_css_hover_content(
                     .flat_map(|props| props.iter())
                     .find(|prop| prop.name == name)
                 {
-                    return Some(format_css_property_entry(
-                        &property.name,
-                        &property.status,
-                        &property.description,
-                        property.syntax.as_deref(),
-                        property.browsers.as_deref(),
-                        property.references.as_deref(),
-                    ));
+                    return Some(format_css_property_entry(property));
                 }
             }
             None
         }
         // Handle at-rules like @media, @supports, etc.
         CssSyntaxKind::CSS_AT_RULE => {
+            eprintln!("Looking for at-rule: {}", name);
             for data in css_data {
                 if let Some(at_directive) = data
                     .at_directives
@@ -112,12 +108,7 @@ fn get_css_hover_content(
                     .flat_map(|ats| ats.iter())
                     .find(|at| at.name == name)
                 {
-                    return Some(format_css_at_rule_entry(
-                        &at_directive.name,
-                        &at_directive.status,
-                        &at_directive.description,
-                        at_directive.references.as_deref(),
-                    ));
+                    return Some(format_css_at_rule_entry(at_directive));
                 }
             }
             None
@@ -134,34 +125,22 @@ fn get_css_hover_content(
 }
 
 /// Formats the CSS property entry into a hover content string.
-fn format_css_property_entry(
-    name: &str,
-    status: &Option<Status>,
-    description: &Option<MarkupDescriptionOrString>,
-    syntax: Option<&str>,
-    browsers: Option<&[String]>,
-    references: Option<&[Reference]>,
-) -> String {
+fn format_css_property_entry(property: &PropertyEntry) -> String {
     let mut content = String::new();
-    write_status(&mut content, status);
-    write_description(&mut content, description);
-    write_browser_support(&mut content, browsers);
-    write_syntax(&mut content, syntax);
-    write_references(&mut content, references, name);
+    write_status(&mut content, &property.status);
+    write_description(&mut content, &property.description);
+    write_browser_support(&mut content, &property.browsers);
+    write_syntax(&mut content, &property.syntax);
+    write_references(&mut content, &property.references, &property.name);
     content
 }
 
 /// Formats the CSS at-rule entry into a hover content string.
-fn format_css_at_rule_entry(
-    name: &str,
-    status: &Option<Status>,
-    description: &Option<MarkupDescriptionOrString>,
-    references: Option<&[Reference]>,
-) -> String {
+fn format_css_at_rule_entry(at_property: &AtDirectiveEntry) -> String {
     let mut content = String::new();
-    write_status(&mut content, status);
-    write_description(&mut content, description);
-    write_references(&mut content, references, name);
+    write_status(&mut content, &at_property.status);
+    write_description(&mut content, &at_property.description);
+    write_references(&mut content, &at_property.references, &at_property.name);
     content
 }
 
@@ -193,18 +172,13 @@ fn escape_markdown(text: &str) -> String {
 
 /// Parses the status of a CSS Custom Data to a human-readable string, and writes it to the hover content.
 fn write_status(content: &mut String, status: &Option<Status>) {
-    match status {
-        Some(Status::Experimental) => {
-            writeln!(content, "🧪 *Experimental, use with caution.*\n").unwrap()
-        }
-        Some(Status::Obsolete) => {
-            writeln!(content, "🚧 *Obsolete, consider using alternatives.*\n").unwrap()
-        }
-        Some(Status::Nonstandard) => {
-            writeln!(content, "🚨 *Non-standard, avoid using it.*\n").unwrap()
-        }
-        _ => {}
-    }
+    let status_str = match status {
+        Some(Status::Experimental) => "🧪 *Experimental, use with caution.*\n",
+        Some(Status::Obsolete) => "🚧 *Obsolete, consider using alternatives.*\n",
+        Some(Status::Nonstandard) => "🚨 *Non-standard, avoid using it.*\n",
+        _ => return,
+    };
+    writeln!(content, "{}", status_str).unwrap();
 }
 
 /// Writes the description of a CSS Custom Data to the hover content.
@@ -219,7 +193,7 @@ fn write_description(content: &mut String, description: &Option<MarkupDescriptio
 }
 
 /// Writes the syntax of a CSS Custom Data to the hover content.
-fn write_syntax(content: &mut String, syntax: Option<&str>) {
+fn write_syntax(content: &mut String, syntax: &Option<String>) {
     if let Some(syntax) = syntax {
         writeln!(content, "Syntax: `{}`\n", syntax).unwrap();
     }
@@ -228,7 +202,7 @@ fn write_syntax(content: &mut String, syntax: Option<&str>) {
 /// Writes the references of a CSS Custom Data to the hover content.
 fn write_references(
     content: &mut String,
-    references: Option<&[Reference]>,
+    references: &Option<Vec<Reference>>,
     name_for_caniuse: &str,
 ) {
     if let Some(references) = references {
@@ -249,7 +223,7 @@ fn write_references(
 }
 
 /// Writes the browser support information of a CSS Custom Data to the hover content.
-fn write_browser_support(content: &mut String, browsers: Option<&[String]>) {
+fn write_browser_support(content: &mut String, browsers: &Option<Vec<String>>) {
     if let Some(browsers) = browsers {
         let browsers_str = browsers
             .iter()

@@ -16,7 +16,7 @@ A CSS Language Service made with Rust.
 | Path completion     | ❌       | ✅      | -                      |
 | Definition          | ❌       | ✅      | -                      |
 | References          | ❌       | ✅      | -                      |
-| Document Symbols    | ❌       | ✅      | -                      |
+| Document Symbols    | ✅       | ✅      | Supports more symbols  |
 | Document Highlights | ❌       | ✅      | -                      |
 | Code Actions        | ❌       | ✅      | -                      |
 | Code Lens           | ❌       | ✅      | -                      |

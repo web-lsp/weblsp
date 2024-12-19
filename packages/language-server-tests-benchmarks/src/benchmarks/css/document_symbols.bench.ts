@@ -12,13 +12,13 @@ const weblspUri = (await weblsp.openTextDocument(filePath, "css")).uri;
 const vscodeLsp = await startLanguageServer(undefined, "vscode-css");
 const vscodeLspUri = (await vscodeLsp.openTextDocument(filePath, "css")).uri;
 
-describe("DocumentSymbols", async () => {
-	bench("weblsp - DocumentSymbols", async () => {
+describe("Document Symbols", async () => {
+	bench("weblsp - Document Symbols", async () => {
 		await weblsp.sendDocumentSymbolRequest(weblspUri);
 	});
 
 	if (!process.env.CODSPEED) {
-		bench("vscode-css-languageserver - DocumentSymbols", async () => {
+		bench("vscode-css-languageserver - Document Symbols", async () => {
 			await vscodeLsp.sendDocumentSymbolRequest(vscodeLspUri);
 		});
 	}

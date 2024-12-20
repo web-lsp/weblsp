@@ -14,12 +14,12 @@ wasm = ["wasm-bindgen", "serde-wasm-bindgen", "console_error_panic_hook"]
 
 [dependencies]
 biome_css_parser = "0.5.8"
-lsp-types = "0.97"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+lsp-types = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 biome_css_syntax = "0.5.8"
 biome_rowan = "0.5.8"
-rustc-hash = "2.1.0"
+rustc-hash = { workspace = true }
 palette = { git = "https://github.com/Ogeon/palette/", rev = "234309cdd2f96ac04f034f963c018b98065dcfd1", version = "0.7.6" }
 console_error_panic_hook = { version = "0.1.7", optional = true }
 serde-wasm-bindgen = { version = "0.6", optional = true }
@@ -27,7 +27,7 @@ wasm-bindgen = { version = "0.2", optional = true }
 
 [dev-dependencies]
 criterion = { package = "codspeed-criterion-compat", version = "2.7.2" }
-pretty_assertions = "1.4.1"
+pretty_assertions.workspace = true
 
 [[bench]]
 name = "bench_main"

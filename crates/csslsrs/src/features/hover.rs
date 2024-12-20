@@ -1,15 +1,22 @@
-use crate::css_data::{
-    AtDirectiveEntry, CssCustomData, MarkupDescriptionOrString, PropertyEntry, Reference, Status,
-};
-use biome_css_syntax::{CssLanguage, CssSyntaxKind};
-use biome_rowan::{AstNode, SyntaxNode};
-use lsp_types::{Hover, HoverContents, MarkupContent, MarkupKind, Position, TextDocumentItem};
-use std::fmt::Write;
-
 use crate::{
-    converters::{from_proto::offset, line_index::LineIndex, to_proto::range, PositionEncoding},
+    converters::{
+        from_proto::offset,
+        line_index::LineIndex,
+        to_proto::{self, range},
+        PositionEncoding,
+    },
+    css_data::{
+        AtDirectiveEntry, CssCustomData, MarkupDescriptionOrString, PropertyEntry, Reference,
+        Status,
+    },
     service::LanguageService,
 };
+use biome_css_syntax::{CssLanguage, CssSyntaxKind};
+use biome_rowan::{AstNode, SyntaxNode, TextSize};
+use lsp_types::{
+    Hover, HoverContents, MarkupContent, MarkupKind, Position, Range, TextDocumentItem,
+};
+use std::fmt::Write;
 
 /// Extracts hover information for the given CSS node and position.
 fn extract_hover_information(
@@ -17,115 +24,87 @@ fn extract_hover_information(
     position: Position,
     line_index: &LineIndex,
     encoding: PositionEncoding,
-    css_data: &Vec<&CssCustomData>,
+    css_data: &[&CssCustomData],
 ) -> Option<Hover> {
     let offset = offset(line_index, position, encoding).ok()?;
     let token = node.token_at_offset(offset).right_biased()?;
-    let mut selector_node = None;
-    for ancestor in token.ancestors() {
-        match ancestor.kind() {
-            // These nodes represent the full selector, including combinators
+    // Since the token is a leaf node, we need to find a more meaningful parent to provide hover informations.
+    token
+        .ancestors()
+        .find_map(|ancestor| match ancestor.kind() {
+            // Handle CSS selectors, e.g. `.class`, `#id`, `element`, `element.class`, etc.
             CssSyntaxKind::CSS_COMPLEX_SELECTOR | CssSyntaxKind::CSS_SELECTOR_LIST => {
-                selector_node = Some(ancestor.clone());
-                break; // We've found the full selector
+                let name = &ancestor.text_trimmed().to_string();
+                let content = format_selector_entry(name, Some(calculate_specificity(name)));
+                Some(Hover {
+                    contents: HoverContents::Markup(MarkupContent {
+                        kind: MarkupKind::Markdown,
+                        value: content,
+                    }),
+                    range: range(line_index, ancestor.text_trimmed_range(), encoding).ok(),
+                })
             }
-            // Update selector_node if it's not already set
-            CssSyntaxKind::CSS_COMPOUND_SELECTOR => {
-                if selector_node.is_none() {
-                    selector_node = Some(ancestor.clone());
-                }
+            // Handle CSS properties, e.g. `color`, `font-size`, etc.
+            CssSyntaxKind::CSS_GENERIC_PROPERTY => {
+                // We can assume that the token is the IDENT token with the property name.
+                let name = token.text_trimmed().to_string();
+                css_data.iter().find_map(|data| {
+                    data.properties
+                        .as_ref()?
+                        .iter()
+                        .find(|prop| prop.name == name)
+                        .map(format_property_entry)
+                        .map(|content| Hover {
+                            contents: HoverContents::Markup(MarkupContent {
+                                kind: MarkupKind::Markdown,
+                                value: content,
+                            }),
+                            range: range(line_index, token.text_trimmed_range(), encoding).ok(),
+                        })
+                })
             }
-            CssSyntaxKind::CSS_IDENTIFIER => {
-                // Handle identifiers like properties or at-rules
-                if let Some(hover_content) =
-                    get_css_hover_content(ancestor.kind(), token.text().trim(), css_data)
-                {
-                    return Some(Hover {
-                        contents: HoverContents::Markup(MarkupContent {
-                            kind: MarkupKind::Markdown,
-                            value: hover_content,
-                        }),
-                        range: range(line_index, ancestor.text_trimmed_range(), encoding).ok(),
-                    });
-                }
+            // Handle CSS at-rules, e.g. `@media`, `@keyframes`, etc.
+            CssSyntaxKind::CSS_AT_RULE => {
+                // We can't assume that the token is the KW token (with the at-rule name) since it could be the AT token.
+                let at_rule_token = ancestor.first_child()?.first_token()?;
+                css_data.iter().find_map(|data| {
+                    data.at_directives
+                        .as_ref()?
+                        .iter()
+                        .find(|at_rule| {
+                            // CSS Custom Data uses `@` prefix for at-rules, so we need to add it back.
+                            at_rule.name == format!("@{}", at_rule_token.text_trimmed())
+                        })
+                        .map(format_at_rule_entry)
+                        .map(|content| Hover {
+                            contents: HoverContents::Markup(MarkupContent {
+                                kind: MarkupKind::Markdown,
+                                value: content,
+                            }),
+                            range: Some(Range::new(
+                                to_proto::position(
+                                    line_index,
+                                    // We need to include the `@` symbol in the selection range.
+                                    at_rule_token.text_trimmed_range().start() - TextSize::from(1),
+                                    encoding,
+                                )
+                                .unwrap(),
+                                to_proto::position(
+                                    line_index,
+                                    at_rule_token.text_trimmed_range().end(),
+                                    encoding,
+                                )
+                                .unwrap(),
+                            )),
+                        })
+                })
             }
-            _ => {
-                // Not part of a selector; continue traversing
-            }
-        }
-    }
-
-    // Use the identified selector node for hover content
-    if let Some(selector_node) = selector_node {
-        if let Some(hover_content) = get_css_hover_content(
-            selector_node.kind(),
-            selector_node.text().to_string().trim(),
-            css_data,
-        ) {
-            return Some(Hover {
-                contents: HoverContents::Markup(MarkupContent {
-                    kind: MarkupKind::Markdown,
-                    value: hover_content,
-                }),
-                range: range(line_index, selector_node.text_trimmed_range(), encoding).ok(),
-            });
-        }
-    }
-
-    None
-}
-
-/// Generates hover content for a given CSS entity using the provided CSS custom data.
-fn get_css_hover_content(
-    kind: CssSyntaxKind,
-    name: &str,
-    css_data: &Vec<&CssCustomData>,
-) -> Option<String> {
-    match kind {
-        // Handle CSS properties like "color", "font-size", etc.
-        CssSyntaxKind::CSS_IDENTIFIER => {
-            for data in css_data {
-                if let Some(property) = data
-                    .properties
-                    .as_ref()
-                    .iter()
-                    .flat_map(|props| props.iter())
-                    .find(|prop| prop.name == name)
-                {
-                    return Some(format_css_property_entry(property));
-                }
-            }
-            None
-        }
-        // Handle at-rules like @media, @supports, etc.
-        CssSyntaxKind::CSS_AT_RULE => {
-            eprintln!("Looking for at-rule: {}", name);
-            for data in css_data {
-                if let Some(at_directive) = data
-                    .at_directives
-                    .as_ref()
-                    .iter()
-                    .flat_map(|ats| ats.iter())
-                    .find(|at| at.name == name)
-                {
-                    return Some(format_css_at_rule_entry(at_directive));
-                }
-            }
-            None
-        }
-        // Handle CSS selectors like ".class", "#id", "element", etc.
-        CssSyntaxKind::CSS_SELECTOR_LIST
-        | CssSyntaxKind::CSS_COMPLEX_SELECTOR
-        | CssSyntaxKind::CSS_COMPOUND_SELECTOR => Some(format_css_selector_entry(
-            name,
-            Some(calculate_specificity(name)),
-        )),
-        _ => None,
-    }
+            _ => None,
+        })
 }
 
 /// Formats the CSS property entry into a hover content string.
-fn format_css_property_entry(property: &PropertyEntry) -> String {
+fn format_property_entry(property: &PropertyEntry) -> String {
     let mut content = String::new();
     write_status(&mut content, &property.status);
     write_description(&mut content, &property.description);
@@ -136,7 +115,7 @@ fn format_css_property_entry(property: &PropertyEntry) -> String {
 }
 
 /// Formats the CSS at-rule entry into a hover content string.
-fn format_css_at_rule_entry(at_property: &AtDirectiveEntry) -> String {
+fn format_at_rule_entry(at_property: &AtDirectiveEntry) -> String {
     let mut content = String::new();
     write_status(&mut content, &at_property.status);
     write_description(&mut content, &at_property.description);
@@ -145,7 +124,7 @@ fn format_css_at_rule_entry(at_property: &AtDirectiveEntry) -> String {
 }
 
 /// Formats the CSS selector entry into a hover content string.
-fn format_css_selector_entry(name: &str, specificity: Option<(u32, u32, u32)>) -> String {
+fn format_selector_entry(name: &str, specificity: Option<(u32, u32, u32)>) -> String {
     let mut content = String::new();
     // TODO: this is a placeholder, we should render an HTML preview of the selector
     writeln!(content, "**{}**\n", escape_markdown(name)).unwrap();

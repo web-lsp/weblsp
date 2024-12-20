@@ -2,6 +2,7 @@ use csslsrs::service::LanguageService;
 use lsp_types::{
     Hover, HoverContents, MarkupContent, MarkupKind, Position, Range, TextDocumentItem, Uri,
 };
+use pretty_assertions::assert_eq;
 use std::str::FromStr;
 
 /// Utility function to convert an offset to a position
@@ -311,14 +312,30 @@ fn test_hover_with_escaped_colon() {
     assert_hover(css_text, expected_hover);
 }
 
-#[ignore]
 #[test]
 fn test_hover_at_rule() {
+    let css_text = "@med|ia screen and (min-width: 900px) {}";
+    let expected_hover = Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: "Defines a stylesheet for a particular media type.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/CSS/@media), [Can I Use](https://caniuse.com/?search=@media)\n\n".to_string(),
+        }),
+        range: Some(Range {
+            start: Position { line: 0, character: 0 },
+            end: Position { line: 0, character: 6 },
+        }),
+    };
+
+    assert_hover(css_text, expected_hover);
+}
+
+#[test]
+fn test_hover_at_rule_on_at_token() {
     let css_text = "|@media screen and (min-width: 900px) {}";
     let expected_hover = Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: "**@media**\n\n[At Rule Specificity](https://developer.mozilla.org/docs/Web/CSS/Specificity): (0, 0, 0)\n\n".to_string(),
+            value: "Defines a stylesheet for a particular media type.\n\n[MDN Reference](https://developer.mozilla.org/docs/Web/CSS/@media), [Can I Use](https://caniuse.com/?search=@media)\n\n".to_string(),
         }),
         range: Some(Range {
             start: Position { line: 0, character: 0 },

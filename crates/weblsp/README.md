@@ -3,7 +3,7 @@
   <img alt="WEBlsp logo" src="https://raw.githubusercontent.com/web-lsp/weblsp/refs/heads/main/.github/assets/WEBlsp_logo_light.svg" />
 </picture>
 
-A better Language Server for the Web, made with Rust.
+A Language Server for the Web.
 
 (Work In Progress) ~~It provides full-featured language support for HTML and CSS, including code completion, diagnostics, hover, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), WEBlsp is designed to work with any IDE that supports LSP. 
 
@@ -18,13 +18,3 @@ This crate contains the Language Server implementation in Rust. WEBlsp receives 
 🚨 [Report a security vulnerability](https://github.com/web-lsp/weblsp/security/advisories/new), and be sure to review our [security policy](https://github.com/web-lsp/weblsp/blob/main/SECURITY.md).
 
 💬 [Join the discussion](https://github.com/web-lsp/weblsp/discussions), if you have any questions, ideas, or suggestions.
-
-## Getting Started
-
-WIP.
-
-## Building
-
-WIP.
-
-

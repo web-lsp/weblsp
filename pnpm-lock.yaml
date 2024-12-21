@@ -50,7 +50,7 @@ importers:
         specifier: ^2.1.8
         version: 2.1.8(@types/node@22.10.1)
 
-  packages/language-server-tests-benchmarks:
+  packages/ls-tests-benchmarks:
     dependencies:
       '@codspeed/vitest-plugin':
         specifier: ^3.1.1

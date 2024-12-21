@@ -49,5 +49,5 @@ jobs:
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
         with:
-          run: cargo codspeed run && pnpm -C ./packages/benchmark-wasm run benchmark-codspeed && pnpm -C ./packages/language-server-tests-benchmarks run benchmark-codspeed
+          run: cargo codspeed run && pnpm -C ./packages/benchmark-wasm run benchmark-codspeed && pnpm -C ./packages/ls-tests-benchmarks run benchmark-codspeed
           token: ${{ secrets.CODSPEED_TOKEN }}

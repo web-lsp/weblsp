@@ -34,4 +34,4 @@ benchmark:
 	echo "Running WASM benchmarks..."
 	pnpm -C ./packages/benchmark-wasm run benchmark --run
 	echo "Running Language Server benchmarks..."
-	pnpm -C ./packages/language-server-tests-benchmarks run benchmark --run
+	pnpm -C ./packages/ls-tests-benchmarks run benchmark --run

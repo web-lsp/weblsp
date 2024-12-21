@@ -11,8 +11,6 @@ This is the root of WEBlsp monorepository, please refer to the list of crates an
 
 ## Quick Links
 
-📖 [Main repository](https://github.com/web-lsp/weblsp/), with all related crates and packages.
-
 🐛 [Report a bug](https://github.com/web-lsp/weblsp/issues), please read our [contributing guidelines](https://github.com/web-lsp/weblsp/blob/main/CONTRIBUTING.md) and [code of conduct](https://github.com/web-lsp/weblsp/blob/main/CODE_OF_CONDUCT.md) first.
 
 🚨 [Report a security vulnerability](https://github.com/web-lsp/weblsp/security/advisories/new), and be sure to review our [security policy](https://github.com/web-lsp/weblsp/blob/main/SECURITY.md).

@@ -1,21 +1,30 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../../.github/assets/WEBlsp_logo_dark.svg" />
-  <img alt="WEBlsp logo" src=".../../.github/assets/WEBlsp_logo_light.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/web-lsp/weblsp/refs/heads/main/.github/assets/WEBlsp_logo_dark.svg" />
+  <img alt="WEBlsp logo" src="https://raw.githubusercontent.com/web-lsp/weblsp/refs/heads/main/.github/assets/WEBlsp_logo_light.svg" />
 </picture>
 
 A better Language Server for the Web, made with Rust.
 
-(Work In Progress) ~~It provides full-featured language support for HTML and CSS, including syntax highlighting, code completion, error checking, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), WEBlsp is designed to work with any IDE that supports LSP. Build on top of ~~HTMLlsrs~~ and [CSSlsrs](https://github.com/web-lsp/csslsrs), our own modern, fast, and reliable Language Services.
+(Work In Progress) ~~It provides full-featured language support for HTML and CSS, including code completion, diagnostics, hover, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), WEBlsp is designed to work with any IDE that supports LSP. 
 
-## TODO
+This crate contains the Language Server implementation in Rust. WEBlsp receives requests from the client, and dispatches them to the appropriate language service (e.g., [CSSlsrs](https://github.com/web-lsp/weblsp/tree/main/crates/csslsrs)), before sending the response back to the client.
 
-- [x] LSP basic server
-- [ ] Handle request by language (HTML, CSS)
-- [x] CSS Language Service (CSSlsrs) integration
-- [ ] HTML Language Service (HTMLlsrs) integration
-- [ ] Publish VSCode extension
+## Quick Links
 
-## Useful commands
+📖 [Main repository](https://github.com/web-lsp/weblsp/), with all related crates and packages.
 
-- `cargo build` - Build the project
-- `cd ./packages/vscode && pnpm run compile` - Compile the vscode extension
+🐛 [Report a bug](https://github.com/web-lsp/weblsp/issues), please read our [contributing guidelines](https://github.com/web-lsp/weblsp/blob/main/CONTRIBUTING.md) and [code of conduct](https://github.com/web-lsp/weblsp/blob/main/CODE_OF_CONDUCT.md) first.
+
+🚨 [Report a security vulnerability](https://github.com/web-lsp/weblsp/security/advisories/new), and be sure to review our [security policy](https://github.com/web-lsp/weblsp/blob/main/SECURITY.md).
+
+💬 [Join the discussion](https://github.com/web-lsp/weblsp/discussions), if you have any questions, ideas, or suggestions.
+
+## Getting Started
+
+WIP.
+
+## Building
+
+WIP.
+
+

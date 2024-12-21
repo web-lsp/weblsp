@@ -12,7 +12,6 @@ First, a huge **thank you** for dedicating your time to helping us improve our p
 
 ## Before submitting Pull Requests (PRs)
 
-- **Open an issue.** Before making significant changes, open an issue to discuss the problem and potential solutions with us.
 - **Check for duplicates.** Look through existing PRs to see if your changes have already been submitted.
 - **Avoid trivial changes.** Don't submit PRs for typos, grammar, or insignificant changes, as they will be **declined** without review.
 - PRs don't need to be perfect. Submit your best effort, and we will gladly assist in polishing the work.

@@ -1,6 +1,6 @@
-# benchmark-wasm
+# @web-lsp/benchmark-wasm
 
-This package contains benchmarks for the WASM output of CSSLSRS, comparing it with other popular language services for CSS in JavaScript.
+This private package contains benchmarks for the WASM output of CSSLSRS, comparing it with other popular language services for CSS in JavaScript.
 
 ## Adding a new benchmark
 

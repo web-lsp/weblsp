@@ -1,5 +1,5 @@
 {
-	"name": "language-server-tests-benchmarks",
+	"name": "@weblsp/ls-tests-benchmarks",
 	"type": "module",
 	"private": true,
 	"scripts": {

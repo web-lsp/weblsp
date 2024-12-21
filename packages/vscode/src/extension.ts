@@ -24,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	client = new lsp.LanguageClient(
 		"weblsp",
-		"WEBlsp Language Server",
+		"WEBlsp language server",
 		serverOptions,
 		clientOptions
 	);

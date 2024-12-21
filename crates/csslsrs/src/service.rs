@@ -7,7 +7,7 @@ use crate::{
 use lsp_types::{TextDocumentItem, Uri};
 use serde::{Deserialize, Serialize};
 
-/// The Language Service is the main entry point for interacting with CSSlsrs.
+/// The language service is the main entry point for interacting with CSSlsrs.
 /// It contains a DocumentStore, a PositionEncoding and a reference to the CSS data.
 pub struct LanguageService {
     pub(crate) store: DocumentStore,

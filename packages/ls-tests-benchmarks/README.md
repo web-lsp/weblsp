@@ -1,6 +1,10 @@
-# language-server-tests-benchmarks
+# @weblsp/ls-tests-benchmarks
 
-The tests and benchmarks in this folder aims to test and benchmark the language server in a close-to-reality scenario, using the same JavaScript client powered by `vscode-jsonrpc` used in VS Code.
+This private package aims to test and benchmark the language server in a close-to-reality scenario, using the same JavaScript client powered by `vscode-jsonrpc` used in VS Code.
+
+## Running the tests
+
+WIP.
 
 ## Why are the benchmarks so slow?
 

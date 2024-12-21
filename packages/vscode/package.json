@@ -2,7 +2,7 @@
 	"name": "@weblsp/vscode",
 	"displayName": "WEBlsp",
 	"version": "1.0.0",
-	"description": "A better Language Server for the Web, made with Rust — WORK IN PROGRESS ⚠️",
+	"description": "A language server for the Web — WORK IN PROGRESS ⚠️",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/web-lsp/weblsp"

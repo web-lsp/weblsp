@@ -33,5 +33,5 @@ benchmark:
 	cargo bench
 	echo "Running WASM benchmarks..."
 	pnpm -C ./packages/benchmark-wasm run benchmark --run
-	echo "Running Language Server benchmarks..."
+	echo "Running language server benchmarks..."
 	pnpm -C ./packages/ls-tests-benchmarks run benchmark --run

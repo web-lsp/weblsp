@@ -8,14 +8,14 @@ use std::error::Error;
 
 use crate::requests::cast;
 
-/// Initialize our CSS Language Service (CSSlsrs).
+/// Initialize our CSS language service (CSSlsrs).
 /// Used once at the start of the main loop, so the document store stays alive throughout the server's lifetime.
 pub fn init_language_service() -> LanguageService {
     LanguageService::default()
 }
 
 /// Handle WEBlsp's CSS requests. This function will be called by the main loop when a CSS request is received,
-/// and will dispatch the request to our CSS Language Service (CSSlsrs).
+/// and will dispatch the request to our CSS language service (CSSlsrs).
 pub fn handle_request(
     language_service: &mut LanguageService,
     connection: &Connection,

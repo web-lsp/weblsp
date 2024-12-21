@@ -3,9 +3,9 @@
   <img alt="WEBlsp logo" src="https://raw.githubusercontent.com/web-lsp/weblsp/refs/heads/main/.github/assets/CSSlsrs_logo_light.svg" />
 </picture>
 
-A Language Service for CSS.
+A language service for CSS.
 
-(Work In Progress) ~~It provides full-featured language support for HTML and CSS, including code completion, diagnostics, hover, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), CSSlsrs can be integrated into Language Servers written in Rust or JavaScript/TypeScript (via WebAssembly). Thanks to [Biome](https://biomejs.dev/)'s parser, we deliver a fast and efficient language service, designed to improve your productivity when working with CSS.
+(Work In Progress) ~~It provides full-featured language support, including code completion, diagnostics, hover, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), CSSlsrs can be integrated into language servers written in Rust or via WebAssembly. We use [Biome](https://biomejs.dev/)'s CSS parser behind the scenes.
 
 ## Quick Links
 

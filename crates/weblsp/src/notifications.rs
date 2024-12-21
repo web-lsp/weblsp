@@ -17,7 +17,7 @@ pub fn handle_notification(
         }
         "textDocument/didOpen" => {
             // didOpen notification carry a textDocument item, which contains the document's URI and languageId.
-            // We can use this information to determine in which Language Service's store we should add the document.
+            // We can use this information to determine in which language service's store we should add the document.
             let params: DidOpenTextDocumentParams =
                 serde_json::from_value(notification.params).unwrap();
             match params.text_document.language_id.as_str() {

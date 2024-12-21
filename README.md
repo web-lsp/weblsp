@@ -3,9 +3,9 @@
   <img alt="WEBlsp logo" src="https://raw.githubusercontent.com/web-lsp/weblsp/refs/heads/main/.github/assets/WEBlsp_logo_light.svg" />
 </picture>
 
-A Language Server for the Web.
+A language server for the Web.
 
-(Work In Progress) ~~It provides full-featured language support for HTML and CSS, including code completion, diagnostics, hover, and more.~~ Compliant with the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/), WEBlsp is designed to work with any IDE that supports LSP. Build on top of ~~HTMLlsrs~~ and [CSSlsrs](https://github.com/web-lsp/weblsp/tree/main/crates/csslsrs), our own modern, fast, and reliable Language Services.
+WEBlsp is an implementation of the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (Work In Progress) ~~providing full-featured language support for HTML and CSS, including code completion, diagnostics, hover, and more.~~ It uses ~~HTMLlsrs~~ and [CSSlsrs](https://github.com/web-lsp/weblsp/tree/main/crates/csslsrs), our own modern and fast language services, designed to be integrated into language servers written in Rust or via WebAssembly.
 
 ## Quick Links
 
@@ -44,8 +44,8 @@ WEBlsp is a monorepo that contains the following crates (Rust packages):
 
 | Name      | Description              | Crates.io | README                                  |
 | --------- | ------------------------ | --------- | --------------------------------------- |
-| `weblsp`  | The main Language Server | WIP       | [README.md](./crates/weblsp/README.md)  |
-| `csslsrs` | CSS Language Service     | WIP       | [README.md](./crates/csslsrs/README.md) |
+| `weblsp`  | The main language server | WIP       | [README.md](./crates/weblsp/README.md)  |
+| `csslsrs` | CSS language service     | WIP       | [README.md](./crates/csslsrs/README.md) |
 
 ### Packages
 
@@ -54,7 +54,7 @@ Additionally, WEBlsp contains the following NPM packages (JavaScript packages):
 | Name                  | Description                                | NPM | README                                                |
 | --------------------- | ------------------------------------------ | --- | ----------------------------------------------------- |
 | `vscode`              | WEBlsp VSCode extension                    | WIP | [README.md](./packages/vscode/README.md)              |
-| `csslsrs`             | WASM CSS Language Service                  | WIP | [README.md](./packages/csslsrs/README.md)             |
+| `csslsrs`             | CSSlsrs API for JS/TS                      | WIP | [README.md](./packages/csslsrs/README.md)             |
 | `benchmark-wasm`      | Benchmark WASM packages                    | WIP | [README.md](./packages/benchmark-wasm/README.md)      |
 | `ls-tests-benchmarks` | End-to-end tests and benchmarks for WEBlsp | WIP | [README.md](./packages/ls-tests-benchmarks/README.md) |
 
